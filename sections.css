@@ -1,0 +1,296 @@
+/* Recognition output, model evaluation, and the next-stage roadmap. */
+/* Soft colors across the input → AI → output flow. */
+.behavior-workspace { background: #fff; border-color: #dfe6f0; }
+.signal-panel { background: #fff; color: #41516a; }
+.behavior-workspace .flow-step { color: #657b99; }
+.behavior-workspace .flow-step > span { color: #91a5c1; border-color: #d9e3f0; background: #f8fafd; }
+.signal-toolbar strong { color: #526983; }
+.signal-toolbar .light-text { color: #8198b7; }
+.signal-footer, .signal-footer span:last-child { color: #96a5ba; }
+.signal-download { color: #8098ba; }
+.signal-download:hover { color: #3b74bf; }
+.signal-tooltip { background: #fffffff5; border-color: #d9e3f1; color: #5b7190; box-shadow: 0 5px 20px #708cb31c; }
+.dark-play { background: #ebf2fd; color: #6d91c4; }
+.dark-play:hover { background: #dce9fb; }
+.signal-controls input { accent-color: #7da5df; }
+.truth-bar { border-color: #e3eaf3; color: #91a1b7; }
+.truth-bar strong { color: #58749a; }
+.truth-tag { color: #adbacb; }
+.model-panel { background: linear-gradient(180deg, #edf3fc, #f5f8fd); border-color: #dfe7f3; }
+.ai-core { background: linear-gradient(145deg, #e4edfc, #d9e5f8); border-color: #b9cce8; box-shadow: 0 8px 30px #7798c51c, inset 0 1px 0 #ffffffb3; }
+.ai-core > strong { color: #597cae; }
+.ai-core > span { color: #8da5c7; }
+.model-orbit { border-color: #8caee638; }
+.model-orbit.orbit-b { border-color: #8caee620; }
+.flow-wire { background: linear-gradient(90deg, #b6c8e14d, #93afd3); }
+.wire-out { background: linear-gradient(90deg, #93afd3, #b6c8e14d); }
+.flow-wire:after { border-color: #91add0; }
+.flow-wire i { background: #6b9bdf; }
+.model-description h3 { color: #506989; }
+.model-description p { color: #8b9fbb; }
+.run-inference { background: #d7e6fc; color: #4d73a8; border-color: #bdd1ef; }
+.run-inference:hover { background: #c9dcf9; }
+.inference-status { color: #8ea4c1; }
+.inference-status > span:first-child { background: #9cb4d4; }
+.replay-label { color: #a8b8ce; }
+.processing .ai-core { box-shadow: 0 0 45px #7ba9ec45, inset 0 1px 0 #ffffffa6; animation-name: light-model-pulse; }
+.processing .model-orbit { border-color: #84a9df66; }
+.processing .inference-status > span:first-child { background: #6996d3; box-shadow: 0 0 6px #8ebeff66; }
+.inference-complete .inference-status { color: #639b7e; }
+.inference-complete .inference-status > span:first-child { background: #7db498; }
+.prediction-panel { background: #fbfcff; color: #384d6b; border-left: 1px solid #dfe7f3; }
+.prediction-panel .output-step { color: #657b99; }
+.prediction-panel .output-step > span { color: #91a5c1; border-color: #d9e3f0; }
+.prediction-panel .prediction-result > span:nth-child(2) { color: #94a4bc; }
+.prediction-panel .match-badge { color: #689c82; }
+.prediction-panel .match-badge.mismatch { color: #b68b58; }
+.prediction-panel .probability-heading { color: #91a2ba; }
+.prediction-panel .probability-row { color: #8799b1; }
+.prediction-panel .probability-row.top-probability { color: #4f7fbe; }
+.prediction-panel .probability-track { background: #e9eff8; }
+.prediction-panel .probability-track i { background: #bccce3; }
+.prediction-panel .top-probability .probability-track i { background: #7ca6e3; }
+.inference-complete .prediction-panel .output-step > span { background: #e8f2ec; border-color: #cddfd3; color: #7aa58c; }
+@keyframes light-model-pulse {
+  50% { transform: scale(1.045); box-shadow: 0 0 50px #7ba9ec66; }
+}
+
+.results-section {
+  padding: 78px 0 68px;
+  background: #fff;
+  color: #202124;
+  border-top: 1px solid #e4e7eb;
+}
+.results-section .green-text { color: #27875c; }
+.results-section .section-heading p { color: #7d8796; }
+.results-section .section-heading > .text-link { color: #6985ac; }
+.results-section .result-card {
+  background: #f7f9fc;
+  border: 1px solid #e0e6ef;
+  min-height: 325px;
+  padding: 30px 32px 23px;
+}
+.results-section .our-result {
+  background: linear-gradient(135deg, #eaf0fc, #f2f5fc);
+}
+.results-section .result-tag { color: #8b9ab0; }
+.results-section .result-model h3 { font-size: 24px; }
+.results-section .result-model > span { color: #8a97ab; }
+.results-section .big-metric { margin: 28px 0 27px; }
+.results-section .big-metric > strong { font-size: 68px; color: #253247; }
+.results-section .big-metric > span { color: #7187a7; }
+.results-section .big-metric small { color: #8798af; }
+.results-section .metric-art { color: #abc2e66b; top: -28px; }
+.results-section .minor-metrics { border-color: #cbd7e6; color: #7c8ca3; }
+.results-section .minor-metrics b { color: #536b8a; }
+.results-section .result-card > p { color: #95a2b6; }
+.results-section .benchmark-placeholder { background: transparent; border-style: dashed; }
+.benchmark-placeholder .result-model h3 { color: #9aa5b5; }
+.benchmark-placeholder .result-tag { color: #aab4c2; }
+.empty-benchmark { min-height: 173px; display: grid; place-content: center; text-align: center; }
+.empty-benchmark > span { font-size: 42px; line-height: 1.3; color: #c9d3e1; font-weight: 300; }
+.empty-benchmark > p { font-size: 10px; color: #a6b3c5; margin-top: 10px; }
+.results-section .evidence-details strong { color: #526177; }
+.results-section .evidence-details p { color: #919daf; }
+.results-section .method-details { border-color: #e4e9f0; }
+.results-section .method-details summary { color: #8090a6; }
+.results-section .method-details summary > span { color: #a4b1c4; }
+.results-section .method-content { color: #8e9baf; }
+.results-section .method-links { color: #7097cd; }
+
+.roadmap-section { padding-top: 87px; padding-bottom: 70px; }
+.roadmap-section .section-heading { margin-bottom: 35px; }
+.roadmap-section .section-heading h2 { margin-top: 17px; line-height: 1.5; font-size: 37px; }
+.roadmap-label { font-size: 10px; color: #93a1b2; padding-bottom: 5px; white-space: nowrap; }
+.roadmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 21px; }
+.roadmap-card { border-radius: 24px; padding: 27px; border: 1px solid #e0e7f0; background: #fff; min-width: 0; }
+.roadmap-card-top { display: flex; justify-content: space-between; align-items: center; }
+.roadmap-card-top > span:first-child { font-size: 9px; letter-spacing: 1.5px; color: #8192a9; }
+.roadmap-index { width: 25px; height: 25px; border-radius: 8px; display: grid; place-items: center; background: #edf2f9; color: #9caec5; font: 9px ui-monospace, monospace; }
+.roadmap-card h3 { font-weight: 500; font-size: 24px; letter-spacing: -.7px; line-height: 1.6; margin-top: 18px; }
+.roadmap-card > p { font-size: 12px; line-height: 1.95; color: #8b97a8; margin-top: 12px; }
+.assembly-layout { display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 15px; min-height: 307px; margin-top: 21px; }
+.assembly-visual { display: flex; flex-direction: column; align-items: center; }
+.assembly-visual img { height: 265px; max-width: 100%; object-fit: contain; }
+.assembly-visual > span { font-size: 8px; color: #b1bbc8; margin-top: 9px; }
+.assembly-parts { margin: 0; padding: 0; list-style: none; display: grid; gap: 23px; }
+.assembly-parts li { display: flex; align-items: center; gap: 10px; }
+.assembly-parts li > span { font: 8px ui-monospace, monospace; color: #a2b4c9; }
+.assembly-parts b { font-size: 11px; font-weight: 500; color: #53677d; }
+.assembly-parts small { display: block; font-size: 9px; color: #9eabbc; margin-top: 3px; }
+.roadmap-card-bottom { padding-top: 20px; border-top: 1px solid #d6dfeb99; display: flex; align-items: center; justify-content: space-between; gap: 13px; margin-top: 10px; }
+.roadmap-card-bottom > span { font-size: 8px; line-height: 1.8; color: #9ca9ba; }
+.roadmap-card-bottom > a { font-size: 9px; color: #6084b4; white-space: nowrap; }
+.roadmap-card-bottom > a:hover { color: var(--blue); }
+.breathing-roadmap { background: #edf2fa; border-color: #e2e8f3; }
+.breathing-roadmap .roadmap-index { background: #dfe8f7; color: #8bA3c6; }
+.breathing-visual { position: relative; display: flex; flex-direction: column; justify-content: center; height: 243px; margin-top: 22px; isolation: isolate; }
+.breathing-visual svg { width: 100%; position: relative; z-index: 1; }
+.breath-baseline { fill: none; stroke: #d2dff0; stroke-width: 1; }
+.breath-line { fill: none; stroke: #739cda; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1300; stroke-dashoffset: 1300; animation: breathing-wave 6s ease-in-out infinite; }
+.breathing-halo { position: absolute; left: 50%; top: 44%; translate: -50% -50%; border-radius: 50%; border: 1px solid #aac1e329; z-index: 0; }
+.halo-outer { width: 195px; height: 195px; animation: breathing-halo 5s ease-in-out infinite; }
+.halo-inner { width: 149px; height: 149px; background: #e4ecf955; }
+.breathing-signal-labels { display: flex; justify-content: space-around; color: #8ca3c1; font-size: 9px; }
+.schematic-label { text-align: center; font-size: 7px; color: #a9b8cc; margin-top: 20px; }
+.respiration-plan { display: flex; flex-wrap: wrap; column-gap: 20px; row-gap: 10px; margin: 5px 0 25px; }
+.respiration-plan > span { display: flex; gap: 5px; align-items: center; font-size: 9px; color: #8d9fb7; }
+.respiration-plan i { width: 4px; height: 4px; border-radius: 50%; background: #a2b9d9; }
+.health-horizon { padding: 36px 0 0; margin-top: 20px; }
+.health-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+.health-heading .eyebrow { font-size: 8px; }
+.health-heading h3 { margin-top: 13px; font-weight: 500; font-size: 28px; letter-spacing: -.9px; line-height: 1.5; }
+.research-tag { border: 1px solid #dce7df; padding: 5px 10px; border-radius: 20px; color: #8ba798; font-size: 9px; white-space: nowrap; margin-bottom: 4px; }
+.health-horizon > p { font-size: 12px; color: #909dac; line-height: 1.95; margin-top: 14px; }
+.health-dataflow { padding: 23px 25px; margin-top: 25px; border-radius: 16px; background: #eaf0f5; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; }
+.health-dataflow > span { font-size: 11px; padding: 8px 13px; border-radius: 9px; background: #f9fbff; color: #7a8da6; border: 1px solid #dce4ee; }
+.health-dataflow > b { font-size: 13px; font-weight: 400; color: #afbdce; }
+.health-dataflow .baseline-chip { background: #e1ebfb; color: #7e9ac3; border-color: #d6e2f4; }
+.health-dataflow .risk-chip { background: #dfede4; color: #759e86; border-color: #d3e5d9; }
+.health-directions { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 23px; border: 1px solid #e1e7ee; border-radius: 19px; overflow: hidden; background: #fff; }
+.health-directions article { padding: 23px 20px; display: flex; flex-direction: column; min-width: 0; }
+.health-directions article + article { border-left: 1px solid #e8edf3; }
+.health-code { color: #9caec3; font-size: 7px; letter-spacing: 1px; }
+.health-directions h4 { font-weight: 500; font-size: 13px; margin: 13px 0 0; color: #52657b; }
+.health-directions p { font-size: 10px; color: #9aa7b7; margin-top: 10px; line-height: 1.95; flex: 1; }
+.health-directions a { margin-top: 18px; font-size: 8px; color: #7e9fca; }
+.health-directions a:hover { color: var(--blue); }
+.health-horizon > p.health-scope { font-size: 9px; color: #a6b0be; line-height: 1.9; margin-top: 16px; }
+.roadmap-evidence { margin-top: 27px; border-top: 1px solid #e0e7ef; border-bottom: 1px solid #e0e7ef; }
+.roadmap-evidence summary { display: flex; justify-content: space-between; padding: 18px 2px; font-size: 11px; color: #8b9bb0; cursor: pointer; list-style: none; }
+.roadmap-evidence summary::-webkit-details-marker { display: none; }
+.roadmap-evidence summary > span { transition: transform .2s; font-size: 17px; line-height: 1; color: #a7b5c7; }
+.roadmap-evidence[open] summary > span { transform: rotate(45deg); }
+.roadmap-evidence > div { padding: 0 2px 21px; display: flex; flex-wrap: wrap; gap: 12px 26px; }
+.roadmap-evidence p { flex-basis: 100%; font-size: 11px; color: #9ca9ba; max-width: 950px; line-height: 1.9; }
+.roadmap-evidence a { color: #7a9bc7; font-size: 10px; }
+
+@keyframes breathing-wave {
+  0%, 10% { stroke-dashoffset: 1300; opacity: .5; }
+  75%, 100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes breathing-halo { 50% { scale: 1.07; opacity: .6; } }
+
+@media (max-width: 1100px) {
+  .roadmap-card { padding: 24px; }
+  .roadmap-card h3 { font-size: 21px; }
+  .assembly-layout { grid-template-columns: 1fr 1fr; gap: 11px; }
+  .assembly-parts b { font-size: 10px; }
+  .assembly-parts small { font-size: 8px; }
+  .roadmap-card-bottom { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .health-dataflow { gap: 10px; padding: 22px 15px; }
+  .health-dataflow > span { font-size: 10px; padding: 7px 10px; }
+  .health-directions article { padding: 20px 17px; }
+  .health-directions h4 { font-size: 12px; }
+}
+@media (max-width: 860px) {
+  .results-section { padding-top: 65px; padding-bottom: 50px; }
+  .results-section .result-card { padding: 25px; }
+  .results-section .result-model h3 { font-size: 21px; }
+  .results-section .big-metric > strong { font-size: 58px; }
+  .prediction-panel { border-left: 0; border-top: 1px solid #54658055; }
+  .roadmap-section { padding-top: 65px; padding-bottom: 55px; }
+  .roadmap-section .section-heading h2 { font-size: 32px; }
+  .roadmap-grid { grid-template-columns: 1fr; gap: 17px; }
+  .roadmap-card { padding: 27px; }
+  .roadmap-card h3 { font-size: 24px; }
+  .assembly-layout { grid-template-columns: 1fr 1fr; max-width: 470px; margin-left: auto; margin-right: auto; }
+  .assembly-parts b { font-size: 12px; }
+  .assembly-parts small { font-size: 10px; }
+  .roadmap-card-bottom { flex-direction: row; align-items: center; }
+  .breathing-visual { max-width: 480px; margin-left: auto; margin-right: auto; }
+  .health-heading h3 { font-size: 25px; }
+  .health-dataflow { gap: 9px; }
+  .health-dataflow > span { font-size: 9px; padding: 7px 8px; }
+  .health-directions { grid-template-columns: 1fr 1fr; }
+  .health-directions article { padding: 24px; }
+  .health-directions article:nth-child(3) { border-left: 0; border-top: 1px solid #e8edf3; }
+  .health-directions article:nth-child(4) { border-top: 1px solid #e8edf3; }
+  .health-directions h4 { font-size: 14px; }
+  .health-directions p { font-size: 11px; }
+  .health-directions a { font-size: 9px; }
+}
+@media (max-width: 600px) {
+  .results-section { padding-top: 46px; padding-bottom: 40px; }
+  .results-section .section-heading { align-items: flex-start; }
+  .results-section .section-heading h2 { font-size: 28px; }
+  .results-section .result-card { min-height: 305px; padding: 26px; }
+  .results-section .big-metric > strong { font-size: 64px; }
+  .results-section .benchmark-placeholder { min-height: 230px; }
+  .empty-benchmark { min-height: 120px; }
+  .results-section .evidence-details p { font-size: 10px; }
+  .roadmap-section { padding-top: 49px; padding-bottom: 37px; }
+  .roadmap-section .section-heading { gap: 13px; margin-bottom: 24px; }
+  .roadmap-section .section-heading h2 { font-size: 31px; margin-top: 13px; }
+  .roadmap-label { font-size: 9px; }
+  .roadmap-card { padding: 23px 21px; border-radius: 20px; }
+  .roadmap-card h3 { font-size: 22px; }
+  .roadmap-card > p { font-size: 11px; }
+  .assembly-layout { grid-template-columns: 1fr 1fr; gap: 13px; min-height: 269px; margin-top: 16px; }
+  .assembly-visual img { height: 228px; }
+  .assembly-visual > span { font-size: 6px; white-space: nowrap; }
+  .assembly-parts { gap: 21px; }
+  .assembly-parts li { gap: 7px; }
+  .assembly-parts li > span { font-size: 7px; }
+  .assembly-parts b { font-size: 10px; }
+  .assembly-parts small { font-size: 8px; }
+  .roadmap-card-bottom { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 7px; padding-top: 17px; }
+  .roadmap-card-bottom > span { font-size: 8px; }
+  .roadmap-card-bottom > a { font-size: 9px; }
+  .breathing-visual { height: 217px; margin-top: 15px; }
+  .breathing-signal-labels { font-size: 8px; }
+  .respiration-plan { margin-bottom: 20px; gap: 10px 15px; }
+  .respiration-plan > span { font-size: 8px; }
+  .health-horizon { padding-top: 24px; margin-top: 13px; }
+  .health-heading { flex-direction: column; align-items: flex-start; gap: 13px; }
+  .health-heading .eyebrow { font-size: 7px; letter-spacing: 1px; }
+  .health-heading h3 { font-size: 26px; margin-top: 12px; line-height: 1.6; max-width: 300px; }
+  .research-tag { font-size: 8px; }
+  .health-horizon > p { font-size: 11px; margin-top: 12px; }
+  .health-dataflow { gap: 8px; padding: 20px 12px; margin-top: 21px; }
+  .health-dataflow > span { font-size: 9px; padding: 7px 9px; }
+  .health-dataflow > b { font-size: 10px; }
+  .health-directions { margin-top: 17px; border-radius: 16px; }
+  .health-directions article { padding: 20px 15px; }
+  .health-code { font-size: 6px; letter-spacing: .5px; }
+  .health-directions h4 { font-size: 12px; line-height: 1.8; margin-top: 10px; }
+  .health-directions p { font-size: 10px; margin-top: 7px; }
+  .health-directions a { font-size: 8px; line-height: 1.8; margin-top: 14px; }
+  .health-horizon > p.health-scope { font-size: 8px; margin-top: 13px; }
+  .roadmap-evidence summary { font-size: 10px; padding: 17px 0; }
+  .roadmap-evidence p { font-size: 10px; }
+  .roadmap-evidence a { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .breath-line { stroke-dashoffset: 0; animation: none; }
+  .breathing-halo { animation: none; }
+}
+
+/* A lighter presentation: keep the visual demo and its essential labels. */
+.demo-bottom { justify-content: flex-end; }
+.prediction-panel { display: flex; flex-direction: column; }
+.prediction-panel .prediction-result { margin: 25px 0 22px; }
+.prediction-panel .probabilities {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-evenly;
+  min-height: 290px;
+  gap: 13px;
+  padding: 4px 0 8px;
+}
+.results-section .result-card { min-height: 295px; }
+.results-section .our-result .big-metric { margin-bottom: 31px; }
+.breathing-visual { height: 307px; }
+.health-directions h4 { margin-top: 0; }
+@media (max-width: 600px) {
+  .results-section .benchmark-placeholder { min-height: 220px; }
+  .prediction-panel .probabilities { min-height: 280px; }
+  .breathing-visual { height: 245px; }
+}
+
+.results-section .benchmark-result { background: linear-gradient(135deg, #fcf1e5, #fdf7ef); border-color: #f0e3d4; }
+.results-section .benchmark-result .metric-art { color: #ddbb966b; border-color: #e6caaa; }
+@media (max-width: 860px) {
+  .prediction-panel { border-left: 0; border-top: 1px solid #dfe7f3; }
+}

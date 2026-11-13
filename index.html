@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f9fc">
+  <meta name="description" content="GoCollars 专注宠物健康科技，以行为感知为起点，探索呼吸与生理信息，连接日常理解与健康关怀。">
+  <title>GoCollars · 宠物健康，始于理解。</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sections.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="GoCollars 首页"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="11" height="11" rx="5.5" fill="#4285f4"/><rect x="18" y="3" width="11" height="11" rx="5.5" fill="#fbbc04"/><rect x="3" y="18" width="11" height="11" rx="5.5" fill="#ea5939"/><path d="M23.5 18a5.5 5.5 0 0 1 0 11H18v-5.5a5.5 5.5 0 0 1 5.5-5.5" fill="#34a879"/></svg><span>GoCollars</span></a>
+    <nav aria-label="主导航"><a href="#capture">感知动作</a><a href="#behavior">理解行为</a><a href="#results">模型表现</a><a href="#roadmap">下一步</a></nav>
+    <a class="github-link" href="https://github.com/GoCollars" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="tiny-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> PET HEALTH, UNDERSTOOD.</div>
+        <h1 id="hero-title">每一个动作，<br>都是它的<span class="color-word">语言<svg viewBox="0 0 220 15" aria-hidden="true"><path d="M3 10Q100-4 216 7"/></svg></span>。</h1>
+        <p class="hero-description">从日常行为出发，探索呼吸与生理信号中的健康线索。<br class="desktop-break">让每一次细微变化，成为更懂它、关心它的开始。</p>
+        <div class="hero-actions"><a class="button primary" href="#capture">开始探索 <span aria-hidden="true">↓</span></a><a class="text-link" href="#behavior">直接体验行为识别 <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="hero-visual" id="hero-visual" aria-label="佩戴传感器的犬只概念插画与动态信号">
+        <canvas id="hero-particles" aria-hidden="true"></canvas>
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="pet-portrait">
+          <svg viewBox="0 0 440 440" role="img" aria-label="戴着蓝色智能项圈的犬只概念插画">
+            <defs><clipPath id="portrait-clip"><circle cx="220" cy="220" r="189"/></clipPath><linearGradient id="fur" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#efc582"/><stop offset="1" stop-color="#d8a15f"/></linearGradient></defs>
+            <circle cx="220" cy="220" r="189" fill="#d9eddd"/>
+            <g clip-path="url(#portrait-clip)">
+              <ellipse cx="219" cy="429" rx="128" ry="160" fill="url(#fur)"/>
+              <path d="M177 299C158 325 155 378 169 418H268C278 366 263 322 251 300" fill="#f8dfb4"/>
+              <path d="M149 120C127 108 100 133 94 174C90 205 93 258 112 275C123 287 139 271 154 238L178 154Z" fill="#b77d43"/>
+              <path d="M280 126C301 115 326 139 331 180C334 218 321 258 306 272C294 281 280 259 272 228L257 151Z" fill="#b77d43"/>
+              <path d="M140 175C137 129 167 96 208 94C252 89 287 117 294 158L297 229C297 274 264 313 223 316C175 316 143 285 139 245Z" fill="url(#fur)"/>
+              <path d="M216 109C191 136 187 159 188 189C189 207 180 216 167 228C154 241 157 268 178 282C203 301 242 301 265 279C280 263 279 240 264 228C249 215 239 208 239 188C239 154 232 128 216 109" fill="#fae5c4"/>
+              <path d="M154 203Q167 193 179 202" fill="none" stroke="#5b412a" stroke-width="5" stroke-linecap="round"/>
+              <path d="M250 202Q264 192 277 204" fill="none" stroke="#5b412a" stroke-width="5" stroke-linecap="round"/>
+              <path d="M199 229C198 220 236 220 236 229C235 241 225 247 218 247C210 247 201 240 199 229" fill="#44352c"/>
+              <path d="M218 247V257M192 256Q219 278 245 255" fill="none" stroke="#684c34" stroke-width="4" stroke-linecap="round"/>
+              <path d="M207 266Q218 272 229 265L229 281C225 294 211 294 207 281Z" fill="#df8d80"/>
+              <path d="M150 291Q219 325 287 289L286 312Q222 346 151 315Z" fill="#3f7cec"/>
+              <rect x="198" y="313" width="43" height="36" rx="12" transform="rotate(3 220 330)" fill="#202f3d"/>
+              <circle cx="220" cy="331" r="5" fill="#c9efad"/>
+              <path d="M174 136Q184 119 195 116M249 119Q266 127 271 140" fill="none" stroke="#f8dbad" stroke-width="5" stroke-linecap="round"/>
+            </g>
+            <circle cx="220" cy="220" r="189" fill="none" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="floating-card motion-card"><span class="card-icon blue-icon" aria-hidden="true">⌁</span><div><small>6-AXIS IMU</small><strong>捕捉细微动作</strong></div><span class="live-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+        <div class="floating-card behavior-card"><span class="card-icon green-icon" aria-hidden="true">↗</span><div><small>BEHAVIOR RECOGNITION</small><strong>从信号，到理解。</strong></div><span class="mini-check" aria-hidden="true">↗</span></div>
+        <span class="visual-caption">项圈概念示意</span>
+      </div>
+    </section>
+
+    <section class="journey wrap" aria-label="技术探索路径">
+      <a href="#capture"><span class="step-shape shape-blue" aria-hidden="true">⌁</span><div><small>01 / SENSE</small><strong>让动作成为信号</strong></div><span class="journey-arrow" aria-hidden="true">↗</span></a>
+      <a href="#behavior"><span class="step-shape shape-orange" aria-hidden="true">◉</span><div><small>02 / UNDERSTAND</small><strong>让信号成为行为</strong></div><span class="journey-arrow" aria-hidden="true">↗</span></a>
+      <a href="#results"><span class="step-shape shape-green" aria-hidden="true">▥</span><div><small>03 / VERIFY</small><strong>让结果有据可查</strong></div><span class="journey-arrow" aria-hidden="true">↗</span></a>
+    </section>
+
+    <section class="capture-section wrap" id="capture" aria-labelledby="capture-title">
+      <div class="section-heading"><div><div class="eyebrow blue-text">SENSE <span class="eyebrow-line"></span> IMU CAPTURE</div><h2 id="capture-title">动作，看得见。</h2><p>移动、转身、停下。六个通道，把物理世界变成可观察的曲线。</p></div><span class="section-pill"><span class="status-dot blue-dot"></span> IMU PCB</span></div>
+      <div class="capture-workspace">
+        <aside class="device-panel">
+          <div class="panel-kicker">THE LITTLE SENSOR</div>
+          <div class="board-scene" aria-label="IMU PCB 概念示意"><div class="board-shadow"></div><div class="sensor-board"><div class="usb-socket"></div><span class="board-silkscreen">GoCollars</span><div class="board-antenna"></div><div class="board-chip"><span>IMU<br>6 AXIS</span></div><div class="imu-chip"></div><span class="board-led"></span><span class="board-label">MOTION · PCB</span><div class="pins pins-left"></div><div class="pins pins-right"></div></div><span class="board-orbit"></span></div>
+          <div class="device-name">小小一块，<br>感知六个维度。</div>
+          <div class="device-specs"><span>加速度计<strong>X · Y · Z</strong></span><span>陀螺仪<strong>X · Y · Z</strong></span><span>连接方式<strong>USB 串口</strong></span></div>
+          <button class="button usb-button" id="usb-connect" type="button">连接 IMU PCB <span aria-hidden="true">↗</span></button>
+        </aside>
+        <div class="capture-main">
+          <div class="workspace-toolbar"><div><span class="status-dot blue-dot" id="capture-dot"></span><strong id="capture-mode">真实采集回放</strong></div><button class="icon-text" id="capture-download" type="button">导出 CSV <span aria-hidden="true">↓</span></button></div>
+          <div class="capture-stats"><div><small>采样点</small><strong id="capture-count">187<span> 组</span></strong></div><div><small>记录时长</small><strong id="capture-duration">9.95<span> s</span></strong></div><div><small>平均采样率</small><strong id="capture-rate">18.7<span> Hz</span></strong></div><div><small>数据通道</small><strong>6<span> axes</span></strong></div></div>
+          <div class="capture-chart"><div class="chart-heading"><h3>加速度 <span>g</span></h3><div class="axis-legend"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div></div><canvas id="capture-acc" role="img" aria-label="USB 记录的三轴加速度曲线"></canvas></div>
+          <div class="capture-chart"><div class="chart-heading"><h3>角速度 <span>°/s</span></h3><div class="axis-legend"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div></div><canvas id="capture-gyro" role="img" aria-label="USB 记录的三轴角速度曲线"></canvas></div>
+          <div class="playback-bar"><button class="round-play" id="capture-play" type="button" aria-label="播放采集记录">▶</button><input id="capture-seek" type="range" min="0" max="1000" value="1000" aria-label="采集回放进度"><span class="time-label" id="capture-time">9.95 / 9.95 s</span><button class="icon-text" id="capture-reset" type="button">重置 ↺</button></div>
+          <p class="inline-error" id="capture-error" role="alert" hidden></p>
+        </div>
+      </div>
+      <div class="connection-note"><span aria-hidden="true">↳</span> 分别展示硬件采集记录与公开犬类数据集上的行为识别结果。</div>
+    </section>
+
+    <section class="behavior-section" id="behavior" aria-labelledby="behavior-title">
+      <div class="wrap">
+        <div class="section-heading"><div><div class="eyebrow orange-text">Behavior Recognition</div><h2 id="behavior-title">它在做什么？</h2><p>把两秒 IMU 信号交给 AI，看动作如何变成行为概率。</p></div><div class="behavior-facts"><span><b>2</b> 秒 / 窗口</span><span><b>200</b> 采样点</span><span><b>7</b> 种行为</span></div></div>
+        <div class="sample-strip"><div class="panel-kicker">CHOOSE A MOMENT <span id="sample-total">10 个样本</span></div><div id="sample-list" class="sample-list" aria-label="样本列表"></div></div>
+        <div class="behavior-workspace" id="ai-pipeline">
+          <div class="signal-panel">
+            <div class="flow-step"><span>01</span> IMU 数据输入</div>
+            <div class="signal-toolbar"><div><span class="dark-dot"></span><strong id="signal-title">正在载入样本</strong></div><button class="icon-text light-text" id="view-image" type="button">原图 ↗</button></div>
+            <div class="signal-stage"><canvas id="behavior-signal" role="img" aria-label="作为 AI 输入的六通道 IMU 信号，纵轴为原始存储值"></canvas><div class="signal-tooltip" id="signal-tooltip" hidden></div></div>
+            <div class="signal-footer"><span>六轴 IMU 信号</span><span id="signal-position">0.00 — 2.00 s</span></div>
+            <div class="signal-controls"><button class="round-play dark-play" id="behavior-play" type="button" aria-label="播放当前行为信号">▶</button><input id="behavior-seek" type="range" min="0" max="199" value="199" aria-label="行为信号进度"><a class="signal-download" id="sample-download" href="#" download>CSV ↓</a></div>
+            <div class="truth-bar"><span>真实标签</span><strong id="truth-label">—</strong><span class="truth-tag">GROUND TRUTH</span></div>
+          </div>
+          <div class="model-panel">
+            <div class="flow-step"><span>02</span> AI 行为模型</div>
+            <div class="model-visual"><div class="flow-wire wire-in"><i></i><i></i><i></i></div><div class="model-orbit orbit-a"></div><div class="model-orbit orbit-b"></div><div class="ai-core"><div class="ai-core-grid"><i></i><i></i><i></i><i></i></div><strong>AI</strong><span>BEHAVIOR MODEL</span></div><div class="flow-wire wire-out"><i></i><i></i><i></i></div></div>
+            <div class="model-description"><h3>从运动模式<br>理解行为。</h3><p>轻量模型 · 七类行为</p></div>
+            <button id="run-inference" class="run-inference" type="button">播放识别过程 <span aria-hidden="true">→</span></button>
+            <div class="inference-status" id="inference-status" role="status"><span></span><span id="inference-status-text">准备就绪</span></div>
+            <span class="replay-label">已保存结果回放</span>
+          </div>
+          <aside class="prediction-panel">
+            <div class="flow-step output-step"><span>03</span> 行为概率输出</div>
+            <div class="prediction-result"><strong id="prediction-label">—</strong><span id="prediction-en">—</span><span id="prediction-match" class="match-badge">—</span></div>
+            <div class="probability-heading"><span>行为概率</span></div>
+            <div id="probabilities" class="probabilities"></div>
+          </aside>
+        </div>
+        <div class="demo-bottom"><button type="button" class="text-link" id="next-sample">下一个样本 <span aria-hidden="true">→</span></button></div>
+      </div>
+    </section>
+
+    <section class="results-section" id="results" aria-labelledby="results-title">
+      <div class="wrap">
+        <div class="section-heading"><div><div class="eyebrow green-text">MODEL PERFORMANCE</div><h2 id="results-title">好奇心，也需要证据。</h2><p>七类行为识别 · 按犬只独立评估</p></div></div>
+        <div class="result-grid">
+          <article class="result-card our-result"><span class="result-tag">BEHAVIOR RECOGNITION</span><div class="result-model"><h3>Our Model</h3></div><div class="big-metric"><strong id="our-f1">79.42</strong><span>%<small>Macro-F1</small></span><div class="metric-art" aria-hidden="true">⌁</div></div><div class="minor-metrics"><span>测试窗口 <b>3,708</b></span><span>测试犬只 <b>9</b></span></div></article>
+          <article class="result-card benchmark-result"><span class="result-tag">MODEL COMPARISON</span><div class="result-model"><h3>GPT 6.1 Sol</h3></div><div class="big-metric"><strong id="comparison-f1">44.46</strong><span>%<small>Macro-F1</small></span><div class="metric-art metric-ai" aria-hidden="true">AI</div></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="roadmap-section wrap" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="section-heading"><div><div class="eyebrow blue-text">WHAT'S NEXT <span class="eyebrow-line"></span> THE ROAD AHEAD</div><h2 id="roadmap-title">从理解动作，<br>走向理解健康。</h2><p>下一步，把采集板变成可佩戴的项圈，把行为信号延伸到呼吸与健康趋势。</p></div><span class="roadmap-label">下一阶段研发方向</span></div>
+      <div class="roadmap-grid">
+        <article class="roadmap-card hardware-roadmap">
+          <div class="roadmap-card-top"><span>HARDWARE</span><span class="roadmap-index">01</span></div><h3>把 PCB，装进第一版项圈。</h3><p>组合 PCB、电池与保护壳，完成第一版可佩戴项圈。</p>
+          <div class="assembly-layout"><div class="assembly-visual"><img src="assets/roadmap/collar-exploded.svg" alt="项圈电子舱的上盖、IMU 主板与电池、底壳和绑带的分层装配概念图"><span>装配概念图</span></div><ol class="assembly-parts"><li><span>01</span><div><b>可拆卸上盖</b></div></li><li><span>02</span><div><b>IMU PCB + 电池</b></div></li><li><span>03</span><div><b>保护外壳</b></div></li><li><span>04</span><div><b>项圈固定结构</b></div></li></ol></div>
+        </article>
+        <article class="roadmap-card breathing-roadmap">
+          <div class="roadmap-card-top"><span>RESPIRATION AI</span><span class="roadmap-index">02</span></div><h3>让细微起伏，成为呼吸信号。</h3><p>研究静息和睡眠时的呼吸信号，结合行为识别减少运动干扰。</p>
+          <div class="breathing-visual" aria-label="呼吸周期概念示意，非实测数据"><div class="breathing-halo halo-outer"></div><div class="breathing-halo halo-inner"></div><svg viewBox="0 0 430 180" aria-hidden="true"><path class="breath-baseline" d="M10 110H420"/><path class="breath-line" d="M10 110C25 110 28 110 35 110C55 110 54 37 80 37S108 110 130 110S149 37 175 37S202 110 225 110S245 37 271 37S297 110 320 110S340 37 366 37S393 110 420 110"/></svg><div class="breathing-signal-labels"><span>静息状态</span><span>呼吸周期</span><span>长期趋势</span></div><span class="schematic-label">呼吸波形示意</span></div>
+        </article>
+      </div>
+      <div class="health-horizon"><div class="health-heading"><div><span class="eyebrow green-text">MULTIMODAL HEALTH INTELLIGENCE</span><h3>更早看见，值得关注的变化。</h3></div><span class="research-tag">疾病风险预测 · 研究目标</span></div><p>融合行为与呼吸等生理信息，建立个体基线，探索疾病风险提示。</p><div class="health-dataflow"><span>动作与睡眠</span><b>＋</b><span>呼吸趋势</span><b>＋</b><span>其他生理信号</span><b>→</b><span class="baseline-chip">个体基线</span><b>→</b><span class="risk-chip">健康风险提示</span></div>
+        <div class="health-directions">
+          <article><h4>心衰相关异常</h4><p>关注静息呼吸变化与心脏病相关异常。</p></article>
+          <article><h4>睡眠呼吸障碍</h4><p>探索短头犬的睡眠呼吸异常。</p></article>
+          <article><h4>关节疼痛与活动变化</h4><p>研究骨关节炎相关的活动与姿势变化。</p></article>
+          <article><h4>皮肤瘙痒相关行为</h4><p>识别抓挠、甩头等行为变化。</p></article>
+        </div>
+        <p class="health-scope">以上为研发方向，尚待临床验证。</p>
+      </div>
+    </section>
+    <section class="closing wrap"><span class="closing-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><h2>更懂它一点，<br>更好地关心它。</h2><a class="button primary" href="https://github.com/GoCollars" target="_blank" rel="noopener noreferrer">在 GitHub 认识我们 <span aria-hidden="true">↗</span></a></section>
+  </main>
+  <footer class="site-footer wrap"><a class="brand" href="#">GoCollars </a><span>宠物健康科技</span><a href="#main">回到顶部 ↑</a></footer>
+  <dialog id="image-dialog"><div class="dialog-header"><strong id="image-dialog-title">样本原始波形图</strong><button class="dialog-close" type="button" aria-label="关闭图片">×</button></div><img id="original-image" alt="当前样本的原始六通道波形图"><p>六轴 IMU 波形</p></dialog>
+  <dialog id="usb-dialog"><div class="dialog-header"><strong>把真实世界接进来。</strong><button class="dialog-close" type="button" aria-label="关闭连接说明">×</button></div><div class="usb-dialog-body"><span class="usb-dialog-icon" aria-hidden="true">⌁</span><h2>连接 IMU PCB</h2><p>通过 USB 数据线连接已烧录 GoCollars 兼容固件的 IMU PCB，关闭其他串口工具，然后选择设备。</p><div class="usb-instructions"><span>01 <b>桌面 Chrome / Edge</b></span><span>02 <b>波特率 115200</b></span><span>03 <b>握手后开始采集</b></span></div><p id="usb-support-note" class="usb-support-note"></p><button class="button primary" id="usb-confirm" type="button">选择串口设备 ↗</button><p class="device-note">浏览器会请求串口访问权限。数据仅保留在本次页面内存中，请及时导出 CSV。刷新页面会清空实采记录。</p></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><div class="noscript">请启用 JavaScript，体验曲线回放和样本探索。完整评估结果已列在下方。</div></noscript>
+</body>
+</html>
