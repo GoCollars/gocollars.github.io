@@ -127,6 +127,7 @@ function selectSample(index, scroll=false) {
   if(scroll)$('sample-list').children[index].scrollIntoView({block:'nearest',inline:'nearest',behavior:reducedMotion?'instant':'smooth'});
   $('signal-title').textContent=`样本 ${String(index+1).padStart(2,'0')}`;
   $('truth-label').textContent=labels[s.label];
+  window.GoCollarsBehaviors.select(s.label);
   $('prediction-label').textContent=labels[s.prediction];$('prediction-en').textContent=s.prediction;
   const match=s.prediction===s.label;
   $('prediction-match').textContent=match?'✓ 与真实标签一致':'↔ 与真实标签有差异';
@@ -323,7 +324,14 @@ async function init(){
   bindEvents();requestAnimationFrame(frame);
   const results=await Promise.allSettled([loadData('assets/data/capture.json'),loadData('assets/data/samples.json'),loadData('assets/data/evaluation.json')]);
   if(results[0].status==='fulfilled'){state.capture=results[0].value;renderCapture();}else{showCaptureError('采集数据载入失败。请通过本地 HTTP 服务打开页面并刷新。');}
-  if(results[1].status==='fulfilled'){state.data=results[1].value;selectSample(0);}else{$('signal-title').textContent='样本载入失败';toast('样本数据载入失败，请检查本地服务。');}
+  if(results[1].status==='fulfilled'){
+    state.data=results[1].value;
+    window.GoCollarsBehaviors.mount($('behavior-gallery'),state.data.classes,labels,label=>{
+      const index=currentSamples().findIndex(sample=>sample.label===label);
+      if(index>=0){selectSample(index);state.behaviorProgress=0;setBehaviorPlaying(true);}
+    });
+    selectSample(0);
+  }else{$('signal-title').textContent='样本载入失败';toast('样本数据载入失败，请检查本地服务。');}
   if(results[2].status==='fulfilled'){
     $('our-f1').textContent=(results[2].value.model.macro_f1*100).toFixed(2);
     const comparison=results[2].value.presentation.comparison;
