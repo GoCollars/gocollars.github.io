@@ -1,0 +1,136 @@
+/* Seven consistent, lightweight motion illustrations. */
+.behavior-gallery {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 11px 6px 15px;
+  overflow: hidden;
+  border: 1px solid #e0e6ef;
+  border-radius: 18px;
+  background: #fafbfd;
+  transition: background .25s, border-color .25s, translate .25s;
+}
+.action-card:hover { background: #fff; border-color: #b8cce9; translate: 0 -3px; }
+.action-card[aria-pressed=true] { background: #eaf1fe; border-color: #b6ccef; }
+.action-card > span { color: #7b8da6; font-size: 12px; line-height: 1.5; }
+.action-card[aria-pressed=true] > span { color: #4d77b7; }
+.action-dog { display: block; width: 100%; max-width: 157px; height: auto; overflow: visible; }
+.action-dog path { stroke-linejoin: round; stroke-linecap: round; }
+.pet-fur { fill: #e4bc83; stroke: #bb915f; stroke-width: 1.1; }
+.pet-ear { fill: #ba8c57; }
+.pet-eye, .pet-nose { fill: #6f573e; }
+.pet-mouth { fill: none; stroke: #a2794e; stroke-width: 1; }
+.pet-collar { fill: none; stroke: #7ca3e4; stroke-width: 4.5; }
+.pet-tag { fill: #b8d8bd; stroke: #7da384; stroke-width: .8; }
+.pet-tail, .pet-neck { fill: none; stroke: #d3a66e; stroke-width: 7; }
+.pet-leg { fill: none; stroke: #d2a46b; stroke-width: 5.8; stroke-linejoin: round; }
+.leg-rear-far, .leg-front-far { stroke: #c5a078; opacity: .55; }
+.leg-rear-near { transform-origin: 61px 62px; }
+.leg-rear-far { transform-origin: 66px 61px; }
+.leg-front-near { transform-origin: 108px 60px; }
+.leg-front-far { transform-origin: 101px 61px; }
+.pet-head { transform-origin: 112px 38px; }
+.pet-tail { transform-origin: 54px 51px; }
+.pet-eye { transform-origin: 132px 33px; animation: pet-blink 4.5s infinite; }
+.pet-shadow { fill: #a8bad429; }
+.pet-ground { fill: none; stroke: #bcc9db; stroke-width: 1; opacity: .6; }
+.pet-speed, .pet-scent { fill: none; stroke: #b7c8e0; stroke-width: 1.2; opacity: 0; }
+.pet-mover { transform-origin: 86px 70px; }
+.pet-paw { fill: #e8c895; stroke: #c6a172; stroke-width: 1; }
+.pet-haunch { fill: #dcb179; stroke: #c49a64; stroke-width: 1; }
+
+/* Walking: a slow, alternating step with very little bounce. */
+[data-action=walking] .leg-front-near,
+[data-action=walking] .leg-rear-far { animation: pet-step .95s ease-in-out infinite; }
+[data-action=walking] .leg-front-far,
+[data-action=walking] .leg-rear-near { animation: pet-step .95s ease-in-out -.475s infinite; }
+[data-action=walking] .pet-mover { animation: pet-walk-body .95s ease-in-out infinite; }
+[data-action=walking] .pet-tail { animation: pet-tail-wag 1.4s ease-in-out infinite; }
+
+/* Trotting: faster paired strides and a more visible vertical lift. */
+[data-action=trotting] .leg-front-near,
+[data-action=trotting] .leg-rear-far { animation: pet-trot-step .54s ease-in-out infinite; }
+[data-action=trotting] .leg-front-far,
+[data-action=trotting] .leg-rear-near { animation: pet-trot-step .54s ease-in-out -.27s infinite; }
+[data-action=trotting] .pet-mover { animation: pet-trot-body .54s ease-in-out infinite; }
+[data-action=trotting] .pet-tail { animation: pet-tail-wag .9s ease-in-out infinite; }
+
+/* Galloping: gathered legs, extension, and a suspended phase. */
+[data-action=galloping] .pet-mover { animation: pet-gallop-body .62s ease-in-out infinite; }
+[data-action=galloping] .leg-front-near { animation: pet-gallop-front .62s ease-in-out infinite; }
+[data-action=galloping] .leg-front-far { animation: pet-gallop-front .62s ease-in-out -.08s infinite; }
+[data-action=galloping] .leg-rear-near { animation: pet-gallop-rear .62s ease-in-out infinite; }
+[data-action=galloping] .leg-rear-far { animation: pet-gallop-rear .62s ease-in-out -.08s infinite; }
+[data-action=galloping] .pet-speed { animation: pet-speed-lines .62s ease-out infinite; }
+[data-action=galloping] .pet-shadow { animation: pet-gallop-shadow .62s ease-in-out infinite; transform-origin: 89px 94px; }
+
+/* Standing, sitting, and lying retain their posture with only subtle movement. */
+[data-action=standing] .pet-tail { animation: pet-tail-wag 2.8s ease-in-out infinite; }
+[data-action=standing] .pet-head { animation: pet-look 4s ease-in-out infinite; }
+[data-action=sitting] .sitting-pose { transform: translateX(-7px); }
+[data-action=sitting] .sitting-leg-far { fill: #cba16e; stroke: #b58e60; stroke-width: 1; }
+[data-action=sitting] .sitting-leg-near { fill: #e8c895; stroke: #c6a172; stroke-width: 1; }
+[data-action=sitting] .sitting-chest { fill: #f4dfb9; transform-origin: 106px 70px; animation: pet-sit-breath 3.6s ease-in-out infinite; }
+[data-action=sitting] .sitting-fold { fill: none; stroke: #ba915f; stroke-width: 1.1; }
+[data-action=sitting] .pet-head { animation: pet-sit-look 3.6s ease-in-out infinite; }
+[data-action=sitting] .pet-tail { transform-origin: 70px 83px; animation: pet-sit-tail 3.6s ease-in-out infinite; }
+[data-action=lying] .lying-head { transform: translate(-2px, 30px); }
+[data-action=lying] .pet-mover { transform-origin: 85px 91px; animation: pet-rest-breath 3.5s ease-in-out infinite; }
+[data-action=lying] .pet-eye { animation-delay: -1.7s; }
+
+/* Sniffing: a lowered muzzle, small head movements, and a scent trail. */
+[data-action=sniffing] .pet-head { animation: pet-sniff-head 1.35s ease-in-out infinite; }
+[data-action=sniffing] .pet-tail { animation: pet-tail-wag 2s ease-in-out infinite; }
+[data-action=sniffing] .pet-scent { animation: pet-scent 1.35s ease-out infinite; }
+
+@keyframes pet-step { 0%, 100% { rotate: -17deg; } 50% { rotate: 17deg; } }
+@keyframes pet-trot-step { 0%, 100% { rotate: -27deg; } 50% { rotate: 27deg; } }
+@keyframes pet-walk-body { 50% { translate: 0 -1px; } }
+@keyframes pet-trot-body { 50% { translate: 0 -3px; } }
+@keyframes pet-gallop-body {
+  0%, 100% { transform: translateY(-1px) rotate(-2deg); }
+  45% { transform: translateY(-7px) rotate(3deg) scaleX(1.04); }
+}
+@keyframes pet-gallop-front { 0%, 100% { rotate: -38deg; } 50% { rotate: 42deg; } }
+@keyframes pet-gallop-rear { 0%, 100% { rotate: 38deg; } 50% { rotate: -40deg; } }
+@keyframes pet-gallop-shadow { 45% { scale: .8 1; opacity: .55; } }
+@keyframes pet-speed-lines { 0% { translate: 5px 0; opacity: 0; } 40% { opacity: .9; } 100% { translate: -6px 0; opacity: 0; } }
+@keyframes pet-tail-wag { 0%, 100% { rotate: -5deg; } 50% { rotate: 7deg; } }
+@keyframes pet-blink { 0%, 42%, 46%, 100% { scale: 1 1; } 44% { scale: 1 .12; } }
+@keyframes pet-look { 0%, 100% { rotate: 0deg; } 45%, 65% { rotate: -4deg; } }
+@keyframes pet-sit-look { 0%, 100% { rotate: -1.5deg; } 45%, 65% { rotate: 1.5deg; } }
+@keyframes pet-sit-tail { 0%, 100% { rotate: 0deg; } 50% { rotate: -3deg; } }
+@keyframes pet-sit-breath { 50% { transform: scale(1.015, 1.025); } }
+@keyframes pet-rest-breath { 50% { transform: scaleY(1.035); } }
+@keyframes pet-sniff-head {
+  0%, 100% { transform: translate(-3px, 21px) rotate(38deg); }
+  50% { transform: translate(-1px, 24px) rotate(41deg); }
+}
+@keyframes pet-scent { 0% { opacity: 0; translate: 0 2px; } 45% { opacity: .8; } 100% { opacity: 0; translate: 0 -3px; } }
+
+@media (max-width: 860px) {
+  .behavior-gallery { gap: 7px; }
+  .action-card { padding: 10px 3px 12px; border-radius: 13px; }
+  .action-card > span { font-size: 11px; }
+}
+@media (max-width: 600px) {
+  .behavior-gallery { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .action-card { grid-column: span 2; padding: 7px 2px 9px; border-radius: 12px; }
+  .action-card:nth-child(5) { grid-column: 2 / span 2; }
+  .action-card > span { font-size: 10px; }
+}
+@media (max-width: 360px) {
+  .behavior-gallery { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .action-card:nth-child(5) { grid-column: span 2; }
+  .action-card:nth-child(7) { grid-column: 3 / span 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-card *, .action-card:hover { animation: none !important; transition: none !important; translate: none; }
+  [data-action=sniffing] .pet-head { transform: translate(-3px, 21px) rotate(38deg); }
+}
