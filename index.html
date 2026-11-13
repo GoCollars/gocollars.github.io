@@ -9,8 +9,6 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="sections.css">
-  <link rel="stylesheet" href="behaviors.css">
-  <script src="behaviors.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -93,7 +91,6 @@
     <section class="behavior-section" id="behavior" aria-labelledby="behavior-title">
       <div class="wrap">
         <div class="section-heading"><div><div class="eyebrow orange-text">Behavior Recognition</div><h2 id="behavior-title">它在做什么？</h2><p>把两秒 IMU 信号交给 AI，看动作如何变成行为概率。</p></div><div class="behavior-facts"><span><b>2</b> 秒 / 窗口</span><span><b>200</b> 采样点</span><span><b>7</b> 种行为</span></div></div>
-        <div id="behavior-gallery" class="behavior-gallery" role="group" aria-label="七种犬只行为的动画示意；点击动作查看对应 IMU 样本"></div>
         <div class="sample-strip"><div class="panel-kicker">CHOOSE A MOMENT <span id="sample-total">10 个样本</span></div><div id="sample-list" class="sample-list" aria-label="样本列表"></div></div>
         <div class="behavior-workspace" id="ai-pipeline">
           <div class="signal-panel">
