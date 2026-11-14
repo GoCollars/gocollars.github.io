@@ -294,3 +294,13 @@
 @media (max-width: 860px) {
   .prediction-panel { border-left: 0; border-top: 1px solid #dfe7f3; }
 }
+
+/* Browser-native USB/BLE acquisition controls. */
+.capture-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}
+.capture-controls label,.transport-label{display:flex;align-items:center;gap:7px;font-size:11px;color:#62738a}
+.capture-controls select,.capture-controls input,.transport-label select{font:inherit;color:#29405c;border:1px solid #dbe3ee;background:#fff;padding:8px;border-radius:8px;min-height:36px;max-width:100%}
+.capture-controls input{width:88px}.capture-controls .capture-start{padding:9px 17px;min-height:36px;background:#e8f0ff;color:#28579b;font-size:11px;border-radius:20px}
+.capture-controls [hidden]{display:none}.capture-controls button:disabled,.capture-controls select:disabled,.capture-controls input:disabled{opacity:.45;cursor:default}
+.capture-detail{color:#71829a;font-size:10px;line-height:1.8;padding:13px 0 3px}.transport-label{margin:20px 0}.transport-label select{flex:1;min-width:0}
+#capture-play:disabled{opacity:.45;cursor:default}.workspace-toolbar>div{min-width:0}.workspace-toolbar strong{overflow-wrap:anywhere}
+@media(max-width:600px){.capture-controls{gap:10px}.capture-controls label{font-size:11px}.capture-controls .capture-start{margin-left:0}.workspace-toolbar{gap:10px}.workspace-toolbar strong{font-size:10px}.capture-detail{font-size:10px}}

@@ -34,7 +34,7 @@ function download(content, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function captureRows() {return serial.port ? serial.samples : state.capture?.samples || [];}
+function captureRows() {return device.hasSession ? device.samples : state.capture?.samples || [];}
 function captureDuration() {const rows = captureRows(); return rows.length > 1 ? Math.max(0,(rows.at(-1)[0]-rows[0][0])/1000) : 0;}
 
 function drawCapture(canvas, offset) {
@@ -45,9 +45,9 @@ function drawCapture(canvas, offset) {
   const l=35, r=width-9, t=13, b=height-23;
   const duration = Math.max(captureDuration(), 1);
   // The replay axis remains fixed, while the USB view shows the latest 15 seconds.
-  const end = duration, start = serial.port ? Math.max(0,end-15) : 0;
+  const end = duration, start = device.hasSession ? Math.max(0,end-15) : 0;
   const origin = rows[0]?.[0] || 0;
-  const visibleRows = serial.port ? rows.filter(row => (row[0]-origin)/1000 >= start) : rows;
+  const visibleRows = device.hasSession ? rows.filter(row => (row[0]-origin)/1000 >= start) : rows;
   let lo = Infinity, hi = -Infinity;
   visibleRows.forEach(row => row.slice(offset,offset+3).forEach(v => {lo=Math.min(lo,v);hi=Math.max(hi,v);}));
   if (!Number.isFinite(lo)) {lo=-1;hi=1;}
@@ -65,7 +65,7 @@ function drawCapture(canvas, offset) {
     ctx.strokeStyle='#f3f5f8';ctx.beginPath();ctx.moveTo(xx,t);ctx.lineTo(xx,b);ctx.stroke();
     ctx.fillStyle='#a7afba';ctx.textAlign='center';ctx.fillText(((start+(end-start)*i/4)).toFixed(1)+'s',xx,height-7);
   }
-  const progress = serial.port ? 1 : state.captureProgress;
+  const progress = device.hasSession ? 1 : state.captureProgress;
   const limit = progress*duration;
   const current = visibleRows.filter(row => (row[0]-origin)/1000<=limit);
   ctx.save();ctx.beginPath();ctx.rect(l,t,r-l,b-t);ctx.clip();
@@ -86,11 +86,19 @@ function renderCapture() {
   $('capture-count').innerHTML=rows.length.toLocaleString()+'<span> 组</span>';
   $('capture-duration').innerHTML=duration.toFixed(2)+'<span> s</span>';
   $('capture-rate').innerHTML=(duration>0?(rows.length-1)/duration:0).toFixed(1)+'<span> Hz</span>';
-  $('capture-time').textContent=(serial.port?duration:duration*state.captureProgress).toFixed(2)+' / '+duration.toFixed(2)+' s';
+  $('capture-time').textContent=(device.hasSession?duration:duration*state.captureProgress).toFixed(2)+' / '+duration.toFixed(2)+' s';
   $('capture-seek').value=Math.round(state.captureProgress*1000);
-  $('capture-play').textContent=(serial.port?serial.recording:state.capturePlaying)?'Ⅱ':'▶';
-  $('capture-play').setAttribute('aria-label',serial.port?(serial.recording?'暂停采集':'继续采集'):(state.capturePlaying?'暂停采集回放':'播放采集记录'));
+  $('capture-play').textContent=(device.hasSession?device.recording:state.capturePlaying)?'Ⅱ':'▶';
+  $('capture-play').setAttribute('aria-label',device.hasSession?(device.recording?'暂停采集':'继续采集'):(state.capturePlaying?'暂停采集回放':'播放采集记录'));
   $('capture-download').disabled=rows.length===0;
+  $('capture-seek').disabled=device.hasSession;
+  $('capture-play').disabled=device.hasSession;
+  $('capture-reset').textContent=device.hasSession?'返回示例 ↺':'重置 ↺';
+  $('capture-mode').textContent=device.hasSession?`${device.sessionKind==='ble'?'BLE':'USB'}记录 · ${device.status}`:device.connected?`${device.kind==='ble'?'BLE':'USB'}已连接 · 示例回放`:'真实采集回放';
+  $('capture-loss').innerHTML=device.hasSession?`${device.parser.dropped}<span> 点</span>`:'—';
+  $('capture-detail').textContent=device.hasSession?`目标 ${device.hz} Hz · ${device.count?`${device.count}点批次`:'连续采集'} · 板端漏采 / 溢出 ${device.parser.missed} · 数据保留在本页，请及时导出。`:'支持 USB / BLE 直连 · 默认100 Hz · 连接后点击开始记录。';
+  showCaptureError(device.error);
+  updateDeviceButtons();
   drawCapture($('capture-acc'),1);drawCapture($('capture-gyro'),4);
 }
 
@@ -206,107 +214,79 @@ new IntersectionObserver(entries=>{heroVisible.value=entries[0].isIntersecting;}
 function frame(time) {
   if(!document.hidden&&time-lastPaint>32){
     if(heroVisible.value)heroFrame(time);
-    if(state.capturePlaying&&!serial.port&&state.capture){state.captureProgress=Math.min(1,(time-state.captureStarted)/(captureDuration()*1000));if(state.captureProgress>=1)state.capturePlaying=false;renderCapture();}
+    if(state.capturePlaying&&!device.hasSession&&state.capture){state.captureProgress=Math.min(1,(time-state.captureStarted)/(captureDuration()*1000));if(state.captureProgress>=1)state.capturePlaying=false;renderCapture();}
+    if(device.recording)renderCapture();
     if(state.behaviorPlaying){state.behaviorProgress=Math.min(199,(time-state.behaviorStarted)/1000*100);$('behavior-seek').value=Math.floor(state.behaviorProgress);$('signal-position').textContent=(state.behaviorProgress/100).toFixed(2)+' / 2.00 s';$('inference-status-text').textContent=state.behaviorProgress<70?'读取六轴信号…':state.behaviorProgress<145?'提取运动模式…':'生成行为分布…';if(state.behaviorProgress>=199)setBehaviorPlaying(false,true);drawBehavior();}
     lastPaint=time;
   }
   requestAnimationFrame(frame);
 }
 
-// Web Serial is optional; every demonstration also works without a device.
-// The protocol matches the shipped XIAO firmware: ? -> PONG, r -> IMU,...
-const serial={port:null,reader:null,writer:null,readTask:null,samples:[],recording:false,ready:false,closing:false,pollTimer:null,handshakeTimer:null,pending:false,pendingSince:0,epoch:0};
-
+// Browser-local capture; USB and BLE share the same firmware stream parser.
+const device=new GoCollarsDevice.Connection(()=>{state.capturePlaying=false;renderCapture();});
 function showCaptureError(message){$('capture-error').textContent=message;$('capture-error').hidden=!message;}
-async function writeSerial(command){if(!serial.writer)throw new Error('串口未连接');await serial.writer.write(new TextEncoder().encode(command));}
-
-function serialLine(line) {
-  if(line==='PONG,GO_COLLARS_XIAO_IMU_V1'){serial.ready=true;return;}
-  if(line.startsWith('ERR,')){showCaptureError('开发板报告 IMU 初始化失败。请检查板型与固件。');serial.recording=false;renderCapture();return;}
-  if(!line.startsWith('IMU,'))return;
-  serial.pending=false;
-  const row=line.split(',').slice(1).map(Number);
-  if(row.length!==7||!row.every(Number.isFinite)||!serial.recording)return;
-  if(serial.samples.length&&row[0]<serial.samples.at(-1)[0]){serial.recording=false;showCaptureError('检测到开发板时间戳重置，采集已暂停。请先导出记录，再重新连接。');renderCapture();return;}
-  serial.samples.push(row);
-  if(serial.samples.length>=100000){serial.recording=false;toast('已达到本次 100,000 组上限，请导出 CSV。');}
-  renderCapture();
+function exportCapture(){
+  if(device.hasSession){download(device.csv(),`gocollars_${device.sessionKind}_${device.hz}hz.csv`);device.dirty=false;}
+  else download(state.capture.columns.join(',')+'\n'+state.capture.samples.map(row=>row.join(',')).join('\n'),'gocollars_usb_demo.csv');
+  toast('CSV 已导出');
 }
-
-async function readSerial() {
-  let buffer='';const decoder=new TextDecoder();
-  try{
-    while(serial.reader){const {value,done}=await serial.reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let index;while((index=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,index).trim();buffer=buffer.slice(index+1);serialLine(line);}if(buffer.length>4096)throw new Error('串口数据格式不符合固件协议');}
-  }catch(error){if(!serial.closing){serial.recording=false;serial.ready=false;showCaptureError('串口读取中断，请导出已有数据并断开设备。'+error.message);renderCapture();}}
-  finally{if(serial.reader){serial.reader.releaseLock();serial.reader=null;}}
+async function startCapture(){
+  if(device.dirty&&!confirm('开始新记录会替换当前记录。请先导出需要保留的数据，是否继续？'))return;
+  try{await device.start(Number($('capture-hz').value),$('capture-type').value==='batch'?Number($('capture-points').value):0);}
+  catch(error){showCaptureError(error.message);}
 }
-
-function pollSerial() {
-  serial.pollTimer=setInterval(async()=>{
-    if(!serial.ready||!serial.recording||serial.closing)return;
-    if(serial.pending){if(performance.now()-serial.pendingSince>2000){serial.recording=false;showCaptureError('设备超过 2 秒未返回数据，已暂停。可导出已有记录后重新连接。');renderCapture();}return;}
-    serial.pending=true;serial.pendingSince=performance.now();
-    try{await writeSerial('r');}catch(error){serial.pending=false;serial.recording=false;showCaptureError('发送采样指令失败：'+error.message);renderCapture();}
-  },55);
+function showDeviceDialog(){
+  if(device.connected){device.disconnect().catch(error=>showCaptureError(error.message));return;}
+  $('usb-dialog').showModal();updateDeviceSupport();
 }
-
-async function connectSerial() {
-  if(!('serial' in navigator)){toast('当前浏览器不支持 Web Serial，请用桌面 Chrome 或 Edge 打开。');return;}
-  const button=$('usb-confirm');button.disabled=true;
-  try{
-    const port=await navigator.serial.requestPort();
-    await port.open({baudRate:115200});serial.port=port;serial.epoch++;serial.closing=false;serial.ready=false;serial.pending=false;serial.samples=[];
-    serial.writer=port.writable.getWriter();serial.reader=port.readable.getReader();serial.readTask=readSerial();
-    // Give USB CDC time to settle and retry the handshake, without requesting samples.
-    const deadline=performance.now()+3500;
-    while(!serial.ready&&performance.now()<deadline){await writeSerial('?');await new Promise(resolve=>setTimeout(resolve,300));}
-    if(!serial.ready)throw new Error('没有收到 GoCollars 固件握手，请检查固件和串口。');
-    state.capturePlaying=false;state.captureProgress=1;serial.recording=true;
-    $('capture-mode').textContent='USB 实时采集';
-    $('usb-connect').textContent='断开设备 ↗';$('capture-reset').textContent='查看说明';$('capture-seek').disabled=true;
-    showCaptureError('');$('usb-dialog').close();renderCapture();pollSerial();toast('IMU PCB 已连接，正在读取六轴数据。');
-  }catch(error){if(serial.port)await closeSerial();if(error.name!=='NotFoundError'){showCaptureError(error.message);$('usb-support-note').textContent=error.message;}}
-  finally{button.disabled=false;}
+function updateDeviceSupport(){
+  const ble=$('capture-transport').value==='ble';
+  const supported=window.isSecureContext&&(ble?'bluetooth' in navigator:'serial' in navigator);
+  $('usb-support-note').textContent=supported?(ble?'连接 GoCollars-IMU，授权后可开始采集。':'选择已烧录当前固件的 USB 串口设备。'):'当前浏览器不支持此连接方式，请用桌面Chrome在localhost或HTTPS打开。';
+  $('usb-confirm').disabled=!supported||device.busy;
+  $('usb-confirm').textContent=ble?'选择蓝牙设备 ↗':'选择串口设备 ↗';
 }
-
-async function closeSerial() {
-  serial.closing=true;serial.recording=false;serial.ready=false;serial.pending=false;
-  clearInterval(serial.pollTimer);
-  try{if(serial.reader)await serial.reader.cancel();if(serial.readTask)await serial.readTask;if(serial.writer){serial.writer.releaseLock();serial.writer=null;}if(serial.port)await serial.port.close();}catch(error){showCaptureError('串口已停止。'+error.message);}
-  serial.port=null;serial.closing=false;
+async function connectDevice(){
+  await device.connect($('capture-transport').value);
+  if(device.ready){$('usb-dialog').close();toast('设备已连接。选择频率后点击开始记录。');}
+  else {$('usb-support-note').textContent=device.error||device.status;updateDeviceButtons();}
 }
-
-async function disconnectSerial() {
-  if(serial.samples.length){download('board_ms,ax_g,ay_g,az_g,gx_deg_s,gy_deg_s,gz_deg_s\n'+serial.samples.map(row=>row.join(',')).join('\n'),'gocollars_usb_capture.csv');toast('已导出本次采集，并切回示例回放。');}
-  await closeSerial();state.captureProgress=1;state.capturePlaying=false;
-  $('capture-mode').textContent='真实采集回放';
-  $('usb-connect').innerHTML='连接 IMU PCB <span aria-hidden="true">↗</span>';$('capture-reset').textContent='重置 ↺';$('capture-seek').disabled=false;renderCapture();
+function updateDeviceButtons(){
+  $('usb-connect').disabled=device.busy;
+  $('usb-connect').textContent=device.busy?'正在连接 / 处理…':device.connected?'断开设备 ↗':'连接 IMU PCB ↗';
+  $('usb-confirm').disabled=device.busy;
+  $('capture-start').disabled=!device.ready||device.busy||device.recording;
+  $('capture-stop').disabled=!device.recording||device.busy;
+  for(const id of ['capture-hz','capture-type','capture-points'])$(id).disabled=device.recording||device.busy;
+  $('capture-points-label').hidden=$('capture-type').value!=='batch';
 }
 
 function bindEvents() {
   $('next-sample').addEventListener('click',()=>{if(state.data){selectSample((state.selected+1)%currentSamples().length,true);state.behaviorProgress=0;setBehaviorPlaying(true);}});
   $('capture-play').addEventListener('click',()=>{
-    if(!state.capture)return;
-    if(serial.port){if(!serial.ready){toast('设备已中断，请先导出数据并重新连接。');return;}serial.recording=!serial.recording;serial.pending=false;renderCapture();return;}
+    if(!state.capture||device.hasSession)return;
     state.capturePlaying=!state.capturePlaying;if(state.capturePlaying){if(state.captureProgress>=1)state.captureProgress=0;state.captureStarted=performance.now()-state.captureProgress*captureDuration()*1000;}renderCapture();
   });
   $('capture-seek').addEventListener('input',event=>{state.capturePlaying=false;state.captureProgress=Number(event.target.value)/1000;renderCapture();});
-  $('capture-reset').addEventListener('click',()=>{if(serial.port){toast('暂停后可继续采集；断开设备时会自动导出 CSV。');return;}state.capturePlaying=false;state.captureProgress=0;renderCapture();});
-  $('capture-download').addEventListener('click',()=>{if(!state.capture)return;const rows=captureRows();download(state.capture.columns.join(',')+'\n'+rows.map(r=>r.join(',')).join('\n'),serial.port?'gocollars_usb_capture.csv':'gocollars_usb_demo.csv');toast('CSV 已导出。');});
+  $('capture-reset').addEventListener('click',()=>{
+    if(device.recording||device.busy){toast('请先停止记录');return;}
+    if(device.dirty&&!confirm('返回示例会清空本次记录，请先导出CSV。是否继续？'))return;
+    device.hasSession=false;device.samples=[];device.dirty=false;device.error='';device.parser.reset();
+    state.capturePlaying=false;state.captureProgress=device.connected?1:0;renderCapture();
+  });
+  $('capture-download').addEventListener('click',()=>{if(state.capture)exportCapture();});
+  $('capture-start').addEventListener('click',startCapture);
+  $('capture-stop').addEventListener('click',()=>device.stop().catch(error=>showCaptureError(error.message)));
+  $('capture-type').addEventListener('change',updateDeviceButtons);
+  $('capture-transport').addEventListener('change',updateDeviceSupport);
   $('behavior-play').addEventListener('click',()=>{if(state.data)setBehaviorPlaying(!state.behaviorPlaying);});
   $('run-inference').addEventListener('click',()=>{if(state.data){state.behaviorProgress=0;setBehaviorPlaying(true);}});
   $('behavior-seek').addEventListener('input',event=>{setBehaviorPlaying(false);state.behaviorProgress=Number(event.target.value);$('signal-position').textContent=(state.behaviorProgress/100).toFixed(2)+' / 2.00 s';drawBehavior();});
   $('view-image').addEventListener('click',()=>{const s=currentSample();if(!s)return;$('original-image').src=s.image;$('image-dialog-title').textContent=`样本 ${String(s.number).padStart(2,'0')} · ${labels[s.label]} · 原始波形图`;$('image-dialog').showModal();});
   document.querySelectorAll('.dialog-close').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
   document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}}));
-  $('usb-connect').addEventListener('click',()=>{
-    if(serial.port){disconnectSerial();return;}
-    const supported='serial' in navigator&&window.isSecureContext;
-    $('usb-support-note').textContent=supported?'支持 Web Serial。请选择已烧录兼容固件的串口设备。':'当前浏览器无法直接访问串口。请用桌面 Chrome / Edge，在 localhost 或 HTTPS 打开本页。';
-    $('usb-confirm').disabled=!supported;$('usb-dialog').showModal();
-  });
-  $('usb-confirm').addEventListener('click',connectSerial);
-  if('serial' in navigator)navigator.serial.addEventListener('disconnect',()=>{if(serial.port){serial.recording=false;serial.ready=false;showCaptureError('USB 设备已断开。已有记录保留在本页，可先导出 CSV，再点击断开设备。');renderCapture();}});
+  $('usb-connect').addEventListener('click',showDeviceDialog);
+  $('usb-confirm').addEventListener('click',connectDevice);
   $('behavior-signal').addEventListener('pointermove',event=>{
     const s=currentSample();if(!s||event.pointerType==='touch')return;
     const rect=event.currentTarget.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
@@ -316,7 +296,7 @@ function bindEvents() {
   });
   $('behavior-signal').addEventListener('pointerleave',()=>{state.hover=null;$('signal-tooltip').hidden=true;drawBehavior();});
   let resizeQueued=false;new ResizeObserver(()=>{if(!resizeQueued){resizeQueued=true;requestAnimationFrame(()=>{renderCapture();drawBehavior();heroFrame(performance.now());resizeQueued=false;});}}).observe(document.body);
-  window.addEventListener('beforeunload',event=>{if(serial.samples.length&&serial.port){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(device.dirty){event.preventDefault();event.returnValue='';}});
 }
 
 async function loadData(path){const response=await fetch(path);if(!response.ok)throw new Error('无法载入 '+path);return response.json();}

@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="sections.css">
   <link rel="stylesheet" href="behaviors.css">
   <script src="behaviors.js" defer></script>
+  <script src="device.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -75,15 +76,22 @@
           <div class="panel-kicker">THE LITTLE SENSOR</div>
           <div class="board-scene" aria-label="IMU PCB 概念示意"><div class="board-shadow"></div><div class="sensor-board"><div class="usb-socket"></div><span class="board-silkscreen">GoCollars</span><div class="board-antenna"></div><div class="board-chip"><span>IMU<br>6 AXIS</span></div><div class="imu-chip"></div><span class="board-led"></span><span class="board-label">MOTION · PCB</span><div class="pins pins-left"></div><div class="pins pins-right"></div></div><span class="board-orbit"></span></div>
           <div class="device-name">小小一块，<br>感知六个维度。</div>
-          <div class="device-specs"><span>加速度计<strong>X · Y · Z</strong></span><span>陀螺仪<strong>X · Y · Z</strong></span><span>连接方式<strong>USB 串口 / 蓝牙（规划）</strong></span></div>
+          <div class="device-specs"><span>加速度计<strong>X · Y · Z</strong></span><span>陀螺仪<strong>X · Y · Z</strong></span><span>连接方式<strong>USB 串口 / BLE 蓝牙</strong></span></div>
           <button class="button usb-button" id="usb-connect" type="button">连接 IMU PCB <span aria-hidden="true">↗</span></button>
         </aside>
         <div class="capture-main">
           <div class="workspace-toolbar"><div><span class="status-dot blue-dot" id="capture-dot"></span><strong id="capture-mode">真实采集回放</strong></div><button class="icon-text" id="capture-download" type="button">导出 CSV <span aria-hidden="true">↓</span></button></div>
-          <div class="capture-stats"><div><small>采样点</small><strong id="capture-count">187<span> 组</span></strong></div><div><small>记录时长</small><strong id="capture-duration">9.95<span> s</span></strong></div><div><small>平均采样率</small><strong id="capture-rate">18.7<span> Hz</span></strong></div><div><small>数据通道</small><strong>6<span> axes</span></strong></div></div>
+          <div class="capture-controls" aria-label="设备采集控制">
+            <label>采样频率<select id="capture-hz"><option>10</option><option>20</option><option>25</option><option>50</option><option selected>100</option><option>200</option></select><span>Hz</span></label>
+            <label>采集方式<select id="capture-type"><option value="continuous">连续记录</option><option value="batch">固定点数</option></select></label>
+            <label id="capture-points-label" hidden>每批点数<input id="capture-points" type="number" min="1" max="60000" step="1" value="200"></label>
+            <button class="button capture-start" id="capture-start" type="button" disabled>开始记录</button><button class="icon-text" id="capture-stop" type="button" disabled>停止</button>
+          </div>
+          <div class="capture-stats"><div><small>采样点</small><strong id="capture-count">187<span> 组</span></strong></div><div><small>记录时长</small><strong id="capture-duration">9.95<span> s</span></strong></div><div><small>平均采样率</small><strong id="capture-rate">18.7<span> Hz</span></strong></div><div><small>序号缺失</small><strong id="capture-loss">—</strong></div></div>
           <div class="capture-chart"><div class="chart-heading"><h3>加速度 <span>g</span></h3><div class="axis-legend"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div></div><canvas id="capture-acc" role="img" aria-label="USB 记录的三轴加速度曲线"></canvas></div>
           <div class="capture-chart"><div class="chart-heading"><h3>角速度 <span>°/s</span></h3><div class="axis-legend"><span class="axis-x">X</span><span class="axis-y">Y</span><span class="axis-z">Z</span></div></div><canvas id="capture-gyro" role="img" aria-label="USB 记录的三轴角速度曲线"></canvas></div>
           <div class="playback-bar"><button class="round-play" id="capture-play" type="button" aria-label="播放采集记录">▶</button><input id="capture-seek" type="range" min="0" max="1000" value="1000" aria-label="采集回放进度"><span class="time-label" id="capture-time">9.95 / 9.95 s</span><button class="icon-text" id="capture-reset" type="button">重置 ↺</button></div>
+          <p class="capture-detail" id="capture-detail"></p>
           <p class="inline-error" id="capture-error" role="alert" hidden></p>
         </div>
       </div>
@@ -159,7 +167,7 @@
   </main>
   <footer class="site-footer wrap"><a class="brand" href="#">GoCollars </a><span>宠物健康科技</span><a href="#main">回到顶部 ↑</a></footer>
   <dialog id="image-dialog"><div class="dialog-header"><strong id="image-dialog-title">样本原始波形图</strong><button class="dialog-close" type="button" aria-label="关闭图片">×</button></div><img id="original-image" alt="当前样本的原始六通道波形图"><p>六轴 IMU 波形</p></dialog>
-  <dialog id="usb-dialog"><div class="dialog-header"><strong>把真实世界接进来。</strong><button class="dialog-close" type="button" aria-label="关闭连接说明">×</button></div><div class="usb-dialog-body"><span class="usb-dialog-icon" aria-hidden="true">⌁</span><h2>连接 IMU PCB</h2><p>通过 USB 数据线连接已烧录 GoCollars 兼容固件的 IMU PCB，关闭其他串口工具，然后选择设备。</p><div class="usb-instructions"><span>01 <b>桌面 Chrome / Edge</b></span><span>02 <b>波特率 115200</b></span><span>03 <b>握手后开始采集</b></span></div><p id="usb-support-note" class="usb-support-note"></p><button class="button primary" id="usb-confirm" type="button">选择串口设备 ↗</button><p class="device-note">浏览器会请求串口访问权限。数据仅保留在本次页面内存中，请及时导出 CSV。刷新页面会清空实采记录。</p></div></dialog>
+  <dialog id="usb-dialog"><div class="dialog-header"><strong>把真实世界接进来。</strong><button class="dialog-close" type="button" aria-label="关闭连接说明">×</button></div><div class="usb-dialog-body"><span class="usb-dialog-icon" aria-hidden="true">⌁</span><h2>连接 IMU PCB</h2><p>接通已烧录当前固件的开发板，先断开本地采集台或其他占用设备的程序，再选择连接方式。</p><label class="transport-label">连接方式<select id="capture-transport"><option value="usb">USB 数据线</option><option value="ble">BLE 蓝牙 · GoCollars-IMU</option></select></label><p id="usb-support-note" class="usb-support-note" role="status"></p><button class="button primary" id="usb-confirm" type="button">选择串口设备 ↗</button><p class="device-note">使用桌面Chrome。浏览器会请求设备访问权限，数据保存在本页内存中，刷新或关闭页面会清空记录，请及时导出CSV。</p></div></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   <noscript><div class="noscript">请启用 JavaScript，体验曲线回放和样本探索。完整评估结果已列在下方。</div></noscript>
 </body>
