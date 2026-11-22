@@ -28,7 +28,7 @@
     constructor(onChange=()=>{}) {
       this.onChange=onChange;this.parser=new StreamParser();this.samples=[];this.hasSession=false;this.dirty=false;
       this.connected=false;this.ready=false;this.recording=false;this.busy=false;this.closing=false;
-      this.kind='usb';this.sessionKind='usb';this.hz=100;this.count=0;this.status='';this.error='';this.buffer='';this.waiter=null;this.lastSample=0;
+      this.kind='ble';this.sessionKind='ble';this.lastBle=null;this.hz=100;this.count=0;this.status='';this.error='';this.buffer='';this.waiter=null;this.lastSample=0;
     }
     emit() { this.onChange(this); }
     fail(message) {
@@ -73,9 +73,10 @@
       try {await this.write(command);return await response;}
       finally {clearTimeout(timer);this.waiter=null;}
     }
-    async connect(kind) {
-      if(this.busy||this.connected)return;
-      this.kind=kind;this.busy=true;this.error='';this.closing=false;this.buffer='';this.emit();
+    async connect(kind='ble', {chooseDevice=false}={}) {
+      if(this.busy||this.connected||this.closing)return;
+      const knownDevice=kind==='ble'&&!chooseDevice?this.lastBle:null;
+      this.kind=kind;this.busy=true;this.error='';this.status='';this.buffer='';this.emit();
       try {
         if(kind==='usb') {
           if(!navigator.serial)throw new Error('请使用支持USB串口的桌面Chrome或Edge');
@@ -89,8 +90,14 @@
             finally{reader.releaseLock();if(!this.closing)this.fail('USB已断开，已有记录可导出');}})();
         } else {
           if(!navigator.bluetooth)throw new Error('当前浏览器不支持BLE，请用Mac上的Chrome');
-          this.ble=await navigator.bluetooth.requestDevice({filters:[{name:'GoCollars-IMU',services:[SERVICE]}]});
-          this.onDisconnect=()=>{if(!this.closing)this.fail('蓝牙已断开，已有记录可导出；请断开后重新连接');};
+          this.ble=knownDevice??await navigator.bluetooth.requestDevice({filters:[{name:'GoCollars-IMU',services:[SERVICE]}]});
+          this.onDisconnect=()=>{
+            if(this.closing)return;
+            this.closeBluetooth();
+            this.connected=false;
+            this.status='蓝牙已断开';
+            this.fail('蓝牙已断开。可重新连接，已有记录可导出。');
+          };
           this.ble.addEventListener('gattserverdisconnected',this.onDisconnect);
           const server=await this.ble.gatt.connect(),service=await server.getPrimaryService(SERVICE);
           this.rx=await service.getCharacteristic(RX);this.tx=await service.getCharacteristic(TX);
@@ -101,10 +108,15 @@
         await this.request('x','STOP,');
         if(await this.request('?','PONG,')!=='PONG,GO_COLLARS_XIAO_IMU_V1')throw new Error('设备不是兼容的GoCollars固件');
         if(await this.request('v','CAPS,')!=='CAPS,STREAM100_V2,208')throw new Error('请先烧录支持多频率采集的最新固件');
+        if(kind==='ble')this.lastBle=this.ble;
         this.ready=true;this.status='已连接，等待开始记录';
       } catch(error) {
         await this.disconnect();
-        if(!['NotFoundError','NotAllowedError'].includes(error.name))this.error=error.message;
+        if(knownDevice){
+          this.lastBle=null;
+          this.error='蓝牙重连失败。请确认开发板已通电，再点击连接并重新选择设备。';
+        }
+        else if(!['NotFoundError','NotAllowedError'].includes(error.name))this.error=error.message;
         else this.status='连接已取消或未获授权';
       } finally {this.busy=false;this.emit();}
     }
@@ -126,16 +138,23 @@
       catch(error){this.fail(error.message);throw error;}
       finally{this.busy=false;this.emit();}
     }
+    closeBluetooth() {
+      if(this.tx)this.tx.removeEventListener('characteristicvaluechanged',this.onNotify);
+      if(this.ble){
+        this.ble.removeEventListener('gattserverdisconnected',this.onDisconnect);
+        this.ble.gatt.disconnect();
+      }
+      this.rx=this.tx=this.ble=null;
+    }
     async disconnect() {
-      this.closing=true;
+      this.closing=true;this.emit();
       try {await this.stop();}catch(_error){}
       clearInterval(this.watchdog);
       if(this.reader){try{await this.reader.cancel();await this.readTask;}catch(_error){}this.reader=null;}
       if(this.writer){try{this.writer.releaseLock();}catch(_error){}this.writer=null;}
       if(this.port){try{await this.port.close();}catch(_error){}this.port=null;}
-      if(this.tx){this.tx.removeEventListener('characteristicvaluechanged',this.onNotify);try{await this.tx.stopNotifications();}catch(_error){}this.tx=null;}
-      if(this.ble){this.ble.removeEventListener('gattserverdisconnected',this.onDisconnect);this.ble.gatt.disconnect();this.ble=null;}
-      this.rx=null;this.connected=this.ready=this.recording=false;this.buffer='';this.status='设备已断开，已有记录保留';this.closing=false;this.emit();
+      this.closeBluetooth();
+      this.connected=this.ready=this.recording=false;this.buffer='';this.status='设备已断开';this.closing=false;this.emit();
     }
     csv() {return COLUMNS.join(',')+'\n'+this.samples.map(row=>row.join(',')).join('\n')+'\n';}
   }

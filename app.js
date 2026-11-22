@@ -81,6 +81,7 @@ function drawCapture(canvas, offset) {
 }
 
 function renderCapture() {
+  updateDeviceButtons();
   if(!state.capture) return;
   const rows=captureRows(), duration=captureDuration();
   $('capture-count').innerHTML=rows.length.toLocaleString()+'<span> 组</span>';
@@ -94,11 +95,10 @@ function renderCapture() {
   $('capture-seek').disabled=device.hasSession;
   $('capture-play').disabled=device.hasSession;
   $('capture-reset').textContent=device.hasSession?'返回示例 ↺':'重置 ↺';
-  $('capture-mode').textContent=device.hasSession?`${device.sessionKind==='ble'?'BLE':'USB'}记录 · ${device.status}`:device.connected?`${device.kind==='ble'?'BLE':'USB'}已连接 · 示例回放`:'真实采集回放';
+  $('capture-mode').textContent=device.hasSession?`${device.sessionKind==='ble'?'BLE':'USB'}记录${device.status?' · '+device.status:''}`:device.ready?`${device.kind==='ble'?'BLE':'USB'}已连接 · 示例回放`:'真实采集回放';
   $('capture-loss').innerHTML=device.hasSession?`${device.parser.dropped}<span> 点</span>`:'—';
-  $('capture-detail').textContent=device.hasSession?`目标 ${device.hz} Hz · ${device.count?`${device.count}点批次`:'连续采集'} · 板端漏采 / 溢出 ${device.parser.missed} · 数据保留在本页，请及时导出。`:'支持 USB / BLE 直连 · 默认100 Hz · 连接后点击开始记录。';
+  $('capture-detail').textContent=device.hasSession?`目标 ${device.hz} Hz · ${device.count?`${device.count}点批次`:'连续采集'} · 板端漏采 / 溢出 ${device.parser.missed} · 数据保留在本页，请及时导出。`:'连接开发板后点击「开始记录」。';
   showCaptureError(device.error);
-  updateDeviceButtons();
   drawCapture($('capture-acc'),1);drawCapture($('capture-gyro'),4);
 }
 
@@ -285,29 +285,27 @@ async function startCapture(){
   try{await device.start(Number($('capture-hz').value),$('capture-type').value==='batch'?Number($('capture-points').value):0);}
   catch(error){showCaptureError(error.message);}
 }
-function showDeviceDialog(){
-  if(device.connected){device.disconnect().catch(error=>showCaptureError(error.message));return;}
-  $('usb-dialog').showModal();updateDeviceSupport();
-}
-function updateDeviceSupport(){
-  const ble=$('capture-transport').value==='ble';
-  const supported=window.isSecureContext&&(ble?'bluetooth' in navigator:'serial' in navigator);
-  $('usb-support-note').textContent=supported?(ble?'连接 GoCollars-IMU，授权后可开始采集。':'选择已烧录当前固件的 USB 串口设备。'):'当前浏览器不支持此连接方式，请用桌面Chrome在localhost或HTTPS打开。';
-  $('usb-confirm').disabled=!supported||device.busy;
-  $('usb-confirm').textContent=ble?'选择蓝牙设备 ↗':'选择串口设备 ↗';
-}
-async function connectDevice(){
-  await device.connect($('capture-transport').value);
-  if(device.ready){$('usb-dialog').close();toast('设备已连接。选择频率后点击开始记录。');}
-  else {$('usb-support-note').textContent=device.error||device.status;updateDeviceButtons();}
+async function connectDevice(kind, options){
+  try{
+    if(device.connected){await device.disconnect();return;}
+    await device.connect(kind, options);
+  }catch(error){showCaptureError(error.message);}
 }
 function updateDeviceButtons(){
-  $('usb-connect').disabled=device.busy;
-  $('usb-connect').textContent=device.busy?'正在连接 / 处理…':device.connected?'断开设备 ↗':'连接 IMU PCB ↗';
-  $('usb-confirm').disabled=device.busy;
-  $('capture-start').disabled=!device.ready||device.busy||device.recording;
-  $('capture-stop').disabled=!device.recording||device.busy;
-  for(const id of ['capture-hz','capture-type','capture-points'])$(id).disabled=device.recording||device.busy;
+  const bleSupported=window.isSecureContext&&Boolean(navigator.bluetooth);
+  const usbSupported=window.isSecureContext&&Boolean(navigator.serial);
+  const locked=device.busy||device.closing;
+  $('ble-connect').disabled=locked||(!device.connected&&!bleSupported);
+  $('ble-connect').textContent=device.connected?'断开设备':device.lastBle?'重新连接蓝牙':'连接蓝牙';
+  $('usb-connect').disabled=locked||device.connected||!usbSupported;
+  $('ble-choose').hidden=!bleSupported||device.connected||!device.lastBle;
+  $('ble-choose').disabled=locked;
+  const transport=device.kind==='ble'?'蓝牙':'USB';
+  const hint=bleSupported?'开发板需通电。':usbSupported?'浏览器不支持蓝牙，可使用 USB。':'请在桌面 Chrome 中通过 localhost 或 HTTPS 打开。';
+  $('connection-status').textContent=device.closing?'正在断开…':device.busy&&!device.connected?`正在连接${transport}…`:device.ready?`${transport}已连接`:device.error||device.status||hint;
+  $('capture-start').disabled=!device.ready||locked||device.recording;
+  $('capture-stop').disabled=!device.recording||locked;
+  for(const id of ['capture-hz','capture-type','capture-points'])$(id).disabled=device.recording||locked;
   $('capture-points-label').hidden=$('capture-type').value!=='batch';
 }
 
@@ -328,15 +326,16 @@ function bindEvents() {
   $('capture-start').addEventListener('click',startCapture);
   $('capture-stop').addEventListener('click',()=>device.stop().catch(error=>showCaptureError(error.message)));
   $('capture-type').addEventListener('change',updateDeviceButtons);
-  $('capture-transport').addEventListener('change',updateDeviceSupport);
   $('behavior-play').addEventListener('click',()=>{if(state.data)setBehaviorPlaying(!state.behaviorPlaying);});
   $('run-inference').addEventListener('click',()=>{if(state.data){state.behaviorProgress=0;setBehaviorPlaying(true);}});
   $('behavior-seek').addEventListener('input',event=>{setBehaviorPlaying(false);state.behaviorProgress=Number(event.target.value);updateBehaviorPosition();drawBehavior();});
   $('view-image').addEventListener('click',()=>{const s=currentSample();if(!s)return;$('original-image').src=s.image;$('original-image').alt=`样本的${s.signal[0].length}通道波形`;$('image-dialog-title').textContent=`样本 ${String(s.number).padStart(2,'0')} · ${labels[s.label]} · 原始波形图`;$('image-dialog').showModal();});
   document.querySelectorAll('.dialog-close').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
   document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}}));
-  $('usb-connect').addEventListener('click',showDeviceDialog);
-  $('usb-confirm').addEventListener('click',connectDevice);
+  $('ble-connect').addEventListener('click',()=>connectDevice('ble'));
+  $('usb-connect').addEventListener('click',()=>connectDevice('usb'));
+  $('ble-choose').addEventListener('click',()=>connectDevice('ble',{chooseDevice:true}));
+  updateDeviceButtons();
   $('behavior-signal').addEventListener('pointermove',event=>{
     const s=currentSample();if(!s||event.pointerType==='touch')return;
     const rect=event.currentTarget.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
