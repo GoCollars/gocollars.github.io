@@ -1,11 +1,11 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const labels = {'Galloping':'疾跑','Lying chest':'俯卧','Sitting':'坐姿','Sniffing':'嗅闻','Standing':'站立','Trotting':'小跑','Walking':'行走'};
+const labels = {'Rest':'静息','Locomotion':'移动','Feed':'进食','Galloping':'疾跑','Lying chest':'俯卧','Sitting':'坐姿','Sniffing':'嗅闻','Standing':'站立','Trotting':'小跑','Walking':'行走'};
 const colors = ['#5794f4','#eaa36c','#63bba1'];
 const signalColors = ['#447ed1','#ce8a48','#42957a'];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state = {data:null, capture:null, selected:0, captureProgress:1, capturePlaying:false, captureStarted:0, behaviorProgress:199, behaviorPlaying:false, behaviorStarted:0, hover:null};
+const state = {data:null, capture:null, selected:0, species:'dog', captureProgress:1, capturePlaying:false, captureStarted:0, behaviorProgress:199, behaviorPlaying:false, behaviorStarted:0, hover:null};
 let toastTimer;
 
 function toast(message) {
@@ -102,45 +102,74 @@ function renderCapture() {
   drawCapture($('capture-acc'),1);drawCapture($('capture-gyro'),4);
 }
 
-function currentSamples() {return state.data?.sets.curated.samples || [];}
+function currentSet() {return state.data?.sets[state.species];}
+function currentSamples() {return currentSet()?.samples || [];}
 function currentSample() {return currentSamples()[state.selected];}
+function sampleTiming() {
+  const samples=currentSample().signal.length;
+  const hz=currentSet().hz;
+  return {last:samples-1,hz,seconds:samples/hz};
+}
+function updateBehaviorPosition() {
+  const {last,hz,seconds}=sampleTiming();
+  const finished=state.behaviorProgress>=last;
+  $('behavior-seek').value=Math.floor(state.behaviorProgress);
+  $('signal-position').textContent=finished?`0.00 — ${seconds.toFixed(2)} s`:
+    `${(state.behaviorProgress/hz).toFixed(2)} / ${seconds.toFixed(2)} s`;
+}
 
 function setBehaviorPlaying(playing, completed=false) {
   state.behaviorPlaying=playing;
-  if(playing){if(state.behaviorProgress>=199)state.behaviorProgress=0;state.behaviorStarted=performance.now()-state.behaviorProgress/100*1000;}
+  if(playing){
+    const {last,hz}=sampleTiming();
+    if(state.behaviorProgress>=last)state.behaviorProgress=0;
+    state.behaviorStarted=performance.now()-state.behaviorProgress/hz*1000;
+  }
   $('behavior-play').textContent=playing?'Ⅱ':'▶';
   $('behavior-play').setAttribute('aria-label',playing?'暂停行为信号':'播放当前行为信号');
   $('ai-pipeline').classList.toggle('processing',playing);
   $('ai-pipeline').classList.toggle('inference-complete',completed);
   $('prediction-label').closest('.prediction-panel').setAttribute('aria-busy',String(playing));
   $('run-inference').innerHTML=playing?'正在读取信号 <span aria-hidden="true">· · ·</span>':'播放识别过程 <span aria-hidden="true">→</span>';
-  $('inference-status-text').textContent=playing?'读取六轴信号…':completed?'行为概率已生成':'准备就绪';
+  $('inference-status-text').textContent=playing?'读取信号…':completed?'行为概率已生成':'准备就绪';
 }
 
 function renderSamples() {
   const list=$('sample-list');list.replaceChildren();
+  const species=state.species==='dog'?'犬':'猫';
+  $('sample-total').textContent=`${species} · ${currentSamples().length} 个样本`;
   currentSamples().forEach((s,i) => {
-    const button=document.createElement('button');button.className='sample-button';button.type='button';button.setAttribute('aria-pressed',String(i===state.selected));
-    button.setAttribute('aria-label',`样本 ${i+1}，${labels[s.label]}，模型${s.label===s.prediction?'预测正确':'预测有差异'}`);
+    const button=document.createElement('button');button.className='sample-button';button.type='button';
+    button.setAttribute('aria-pressed',String(i===state.selected));
+    button.setAttribute('aria-label',`${species}样本 ${i+1}，${labels[s.label]}`);
     button.innerHTML=`<span class="sample-number">${String(i+1).padStart(2,'0')}</span><span><strong>${labels[s.label]}</strong><small>${s.label}</small></span><span class="sample-status ${s.prediction===s.label?'':'error'}" aria-hidden="true"></span>`;
-    button.addEventListener('click',()=>{selectSample(i);state.behaviorProgress=0;setBehaviorPlaying(true);});list.append(button);
+    button.addEventListener('click',()=>{selectSample(i);state.behaviorProgress=0;setBehaviorPlaying(true);});
+    list.append(button);
   });
 }
 
 function selectSample(index, scroll=false) {
-  state.selected=index;state.behaviorProgress=199;state.hover=null;setBehaviorPlaying(false);
+  state.selected=index;state.hover=null;setBehaviorPlaying(false);
   $('signal-tooltip').hidden=true;
   const s=currentSample();if(!s)return;
+  const {last,hz}=sampleTiming();
+  const channels=s.signal[0].length;
+  state.behaviorProgress=last;
   renderSamples();
   if(scroll)$('sample-list').children[index].scrollIntoView({block:'nearest',inline:'nearest',behavior:reducedMotion?'instant':'smooth'});
-  $('signal-title').textContent=`样本 ${String(index+1).padStart(2,'0')}`;
+  const species=state.species==='dog'?'犬只':'猫咪';
+  $('signal-title').textContent=`${species}样本 ${String(index+1).padStart(2,'0')}`;
+  $('signal-kind').textContent=`${hz} Hz · ${channels===3?'三轴加速度':'六轴 IMU'}`;
+  $('signal-caption').textContent=`${channels} 轴 IMU 波形`;
+  $('behavior-signal').setAttribute('aria-label',`${species}的 ${channels} 通道 IMU 信号`);
+  $('model-spec').textContent=`${currentSet().classes.length} 类行为`;
   $('truth-label').textContent=labels[s.label];
-  window.GoCollarsBehaviors.select(s.label);
+  window.GoCollarsBehaviors.select(state.species,s.label);
   $('prediction-label').textContent=labels[s.prediction];$('prediction-en').textContent=s.prediction;
   const match=s.prediction===s.label;
   $('prediction-match').textContent=match?'✓ 与真实标签一致':'↔ 与真实标签有差异';
   $('prediction-match').className='match-badge'+(match?'':' mismatch');
-  const classes=state.data.classes;
+  const classes=currentSet().classes;
   const container=$('probabilities');
   if(container.children.length!==classes.length){
     container.replaceChildren(...classes.map(()=>{
@@ -149,8 +178,8 @@ function selectSample(index, scroll=false) {
       return row;
     }));
   }
-  classes.forEach((label,index)=>{
-    const value=s.probabilities[label],row=container.children[index];
+  classes.forEach((label,i)=>{
+    const value=s.probabilities[label],row=container.children[i];
     row.dataset.label=label;
     row.className='probability-row'+(label===s.prediction?' top-probability':'');
     const pct=value*100;const number=pct>0&&pct<.01?'<0.01':pct.toFixed(2);
@@ -159,9 +188,17 @@ function selectSample(index, scroll=false) {
     row.querySelector('i').style.width=pct+'%';
     row.title=`${label}: ${pct.toPrecision(6)}%`;
   });
+  $('model-comparison').replaceChildren(...[['GPT‑6.1 Sol',s.solPrediction],['Qwen4-Max',s.qwenPrediction]]
+    .filter(([,prediction])=>prediction!==undefined).map(([name,prediction])=>{
+      const row=document.createElement('p');
+      const result=document.createElement('strong');
+      result.textContent=labels[prediction] || '无有效标签';
+      row.append(name+' ',result);
+      return row;
+    }));
   $('sample-download').href=s.csv;
-  $('behavior-seek').value=199;
-  $('signal-position').textContent='0.00 — 2.00 s';
+  $('behavior-seek').max=last;
+  updateBehaviorPosition();
   drawBehavior();
 }
 
@@ -169,25 +206,30 @@ function drawBehavior() {
   const s=currentSample(),surface=setupCanvas($('behavior-signal'));
   if(!s||!surface)return;
   const {ctx,width,height}=surface;
+  const {last,seconds}=sampleTiming();
+  const channels=s.signal[0].length;
   const gapY=12,left=29,right=8,top=5,bottom=21;
-  const rowH=(height-top-bottom-gapY*5)/6;
+  const rowH=(height-top-bottom-gapY*(channels-1))/channels;
   const end=Math.floor(state.behaviorProgress);
   const axes=['AX','AY','AZ','GX','GY','GZ'];
-  for(let channel=0;channel<6;channel++){
+  for(let channel=0;channel<channels;channel++){
     const row=channel%3,x0=left,y0=top+channel*(rowH+gapY),x1=width-right,y1=y0+rowH;
     const values=s.signal.map(v=>v[channel]);let lo=Math.min(...values),hi=Math.max(...values);
     const pad=Math.max((hi-lo)*.14,.001);lo-=pad;hi+=pad;
-    const xx=i=>x0+i/199*(x1-x0),yy=v=>y1-(v-lo)/(hi-lo)*rowH;
+    const xx=i=>x0+i/last*(x1-x0),yy=v=>y1-(v-lo)/(hi-lo)*rowH;
     ctx.font='9px ui-monospace, monospace';ctx.textAlign='left';ctx.fillStyle=signalColors[row];ctx.fillText(axes[channel],0,y0+rowH/2+3);
     ctx.strokeStyle='#e2e8f1';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(x0,y0+rowH/2);ctx.lineTo(x1,y0+rowH/2);ctx.stroke();
     for(let tick=0;tick<=2;tick++){
       const x=x0+(x1-x0)*tick/2;ctx.strokeStyle='#edf1f6';ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke();
-      if(channel===5){ctx.textAlign='center';ctx.fillStyle='#8b99ad';ctx.fillText((tick).toFixed(1)+'s',x,y1+15);}
+      if(channel===channels-1){
+        ctx.textAlign=tick===0?'left':tick===2?'right':'center';
+        ctx.fillStyle='#8b99ad';ctx.fillText((seconds*tick/2).toFixed(2)+' s',x,y1+15);
+      }
     }
     ctx.save();ctx.beginPath();ctx.rect(x0,y0,x1-x0,rowH);ctx.clip();
     ctx.strokeStyle=signalColors[row];ctx.lineWidth=1.25;ctx.lineJoin='round';ctx.beginPath();
     values.slice(0,end+1).forEach((v,i)=>i?ctx.lineTo(xx(i),yy(v)):ctx.moveTo(xx(i),yy(v)));ctx.stroke();
-    const cursor=state.hover!==null?state.hover:(end<199?end:null);
+    const cursor=state.hover!==null?state.hover:(end<last?end:null);
     if(cursor!==null){ctx.setLineDash([2,3]);ctx.strokeStyle='#839fc288';ctx.beginPath();ctx.moveTo(xx(cursor),y0);ctx.lineTo(xx(cursor),y1);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=signalColors[row];ctx.beginPath();ctx.arc(xx(cursor),yy(values[cursor]),2.2,0,Math.PI*2);ctx.fill();}
     ctx.restore();
   }
@@ -216,7 +258,15 @@ function frame(time) {
     if(heroVisible.value)heroFrame(time);
     if(state.capturePlaying&&!device.hasSession&&state.capture){state.captureProgress=Math.min(1,(time-state.captureStarted)/(captureDuration()*1000));if(state.captureProgress>=1)state.capturePlaying=false;renderCapture();}
     if(device.recording)renderCapture();
-    if(state.behaviorPlaying){state.behaviorProgress=Math.min(199,(time-state.behaviorStarted)/1000*100);$('behavior-seek').value=Math.floor(state.behaviorProgress);$('signal-position').textContent=(state.behaviorProgress/100).toFixed(2)+' / 2.00 s';$('inference-status-text').textContent=state.behaviorProgress<70?'读取六轴信号…':state.behaviorProgress<145?'提取运动模式…':'生成行为分布…';if(state.behaviorProgress>=199)setBehaviorPlaying(false,true);drawBehavior();}
+    if(state.behaviorPlaying){
+      const {last,hz}=sampleTiming();
+      state.behaviorProgress=Math.min(last,(time-state.behaviorStarted)/1000*hz);
+      updateBehaviorPosition();
+      const progress=state.behaviorProgress/last;
+      $('inference-status-text').textContent=progress<.35?'读取信号…':progress<.73?'提取运动模式…':'生成行为分布…';
+      if(state.behaviorProgress>=last)setBehaviorPlaying(false,true);
+      drawBehavior();
+    }
     lastPaint=time;
   }
   requestAnimationFrame(frame);
@@ -281,8 +331,8 @@ function bindEvents() {
   $('capture-transport').addEventListener('change',updateDeviceSupport);
   $('behavior-play').addEventListener('click',()=>{if(state.data)setBehaviorPlaying(!state.behaviorPlaying);});
   $('run-inference').addEventListener('click',()=>{if(state.data){state.behaviorProgress=0;setBehaviorPlaying(true);}});
-  $('behavior-seek').addEventListener('input',event=>{setBehaviorPlaying(false);state.behaviorProgress=Number(event.target.value);$('signal-position').textContent=(state.behaviorProgress/100).toFixed(2)+' / 2.00 s';drawBehavior();});
-  $('view-image').addEventListener('click',()=>{const s=currentSample();if(!s)return;$('original-image').src=s.image;$('image-dialog-title').textContent=`样本 ${String(s.number).padStart(2,'0')} · ${labels[s.label]} · 原始波形图`;$('image-dialog').showModal();});
+  $('behavior-seek').addEventListener('input',event=>{setBehaviorPlaying(false);state.behaviorProgress=Number(event.target.value);updateBehaviorPosition();drawBehavior();});
+  $('view-image').addEventListener('click',()=>{const s=currentSample();if(!s)return;$('original-image').src=s.image;$('original-image').alt=`样本的${s.signal[0].length}通道波形`;$('image-dialog-title').textContent=`样本 ${String(s.number).padStart(2,'0')} · ${labels[s.label]} · 原始波形图`;$('image-dialog').showModal();});
   document.querySelectorAll('.dialog-close').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
   document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}}));
   $('usb-connect').addEventListener('click',showDeviceDialog);
@@ -290,8 +340,13 @@ function bindEvents() {
   $('behavior-signal').addEventListener('pointermove',event=>{
     const s=currentSample();if(!s||event.pointerType==='touch')return;
     const rect=event.currentTarget.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
-    const index=Math.max(0,Math.min(199,Math.round((x-29)/(rect.width-29-8)*199)));state.hover=index;
-    const tip=$('signal-tooltip');tip.hidden=false;tip.textContent=`${(index/100).toFixed(2)} s\nAX ${s.signal[index][0].toFixed(3)}  GX ${s.signal[index][3].toFixed(2)}\nAY ${s.signal[index][1].toFixed(3)}  GY ${s.signal[index][4].toFixed(2)}\nAZ ${s.signal[index][2].toFixed(3)}  GZ ${s.signal[index][5].toFixed(2)}`;
+    const {last,hz}=sampleTiming();
+    const index=Math.max(0,Math.min(last,Math.round((x-29)/(rect.width-37)*last)));state.hover=index;
+    const tip=$('signal-tooltip');tip.hidden=false;
+    const values=s.signal[index];
+    const lines=['AX','AY','AZ'].map((axis,i)=>`${axis} ${values[i].toFixed(3)}`+
+      (values.length===6?`  G${axis[1]} ${values[i+3].toFixed(2)}`:''));
+    tip.textContent=[`${(index/hz).toFixed(2)} s`,...lines].join('\n');
     tip.style.left=Math.max(0,Math.min(rect.width-190,x+12))+'px';tip.style.top=Math.max(0,Math.min(rect.height-90,y-75))+'px';drawBehavior();
   });
   $('behavior-signal').addEventListener('pointerleave',()=>{state.hover=null;$('signal-tooltip').hidden=true;drawBehavior();});
@@ -302,20 +357,20 @@ function bindEvents() {
 async function loadData(path){const response=await fetch(path);if(!response.ok)throw new Error('无法载入 '+path);return response.json();}
 async function init(){
   bindEvents();requestAnimationFrame(frame);
-  const results=await Promise.allSettled([loadData('assets/data/capture.json'),loadData('assets/data/samples.json'),loadData('assets/data/evaluation.json')]);
+  const results=await Promise.allSettled([loadData('assets/data/capture.json'),loadData('assets/data/samples.json?v=shared-r5')]);
   if(results[0].status==='fulfilled'){state.capture=results[0].value;renderCapture();}else{showCaptureError('采集数据载入失败。请通过本地 HTTP 服务打开页面并刷新。');}
   if(results[1].status==='fulfilled'){
     state.data=results[1].value;
-    window.GoCollarsBehaviors.mount($('behavior-gallery'),state.data.classes,labels,label=>{
-      const index=currentSamples().findIndex(sample=>sample.label===label);
-      if(index>=0){selectSample(index);state.behaviorProgress=0;setBehaviorPlaying(true);}
-    });
+    for(const [species,id] of [['dog','behavior-gallery'],['cat','cat-gallery']]){
+      const set=state.data.sets[species];
+      window.GoCollarsBehaviors.mount($(id),set.classes,labels,label=>{
+        state.species=species;
+        const index=currentSamples().findIndex(sample=>sample.label===label);
+        if(index>=0){selectSample(index);state.behaviorProgress=0;setBehaviorPlaying(true);}
+      },species);
+    }
     selectSample(0);
   }else{$('signal-title').textContent='样本载入失败';toast('样本数据载入失败，请检查本地服务。');}
-  if(results[2].status==='fulfilled'){
-    $('our-f1').textContent=(results[2].value.model.macro_f1*100).toFixed(2);
-    const comparison=results[2].value.presentation.comparison;
-    $('comparison-f1').textContent=Number.isFinite(comparison.macro_f1)?(comparison.macro_f1*100).toFixed(2):'—';
-  }
+
 }
 init();

@@ -7,9 +7,9 @@ window.GoCollarsBehaviors = (() => {
     'Sniffing': 'sniffing',
     'Standing': 'standing',
     'Trotting': 'trotting',
-    'Walking': 'walking'
+    'Walking': 'walking', 'Rest':'cat-rest', 'Locomotion':'cat-walk', 'Feed':'cat-feed'
   };
-  let cards = [];
+  const cards = new Map();
 
   const head = `<g class="pet-head">
     <path class="pet-fur" d="M109 40L111 29Q116 23 126 27L135 31L145 34Q150 35 146 40L136 45Q122 49 113 44Z"/>
@@ -68,8 +68,36 @@ window.GoCollarsBehaviors = (() => {
     </svg>`;
   }
 
-  function mount(container, classes, labels, onSelect) {
-    cards = classes.map(label => {
+  const catHead = `<g class="cat-head">
+    <path class="cat-fur" d="M103 42l1-20 15 12 12-7 5 19q8 10 2 19-9 11-25 4-16-7-10-27z"/>
+    <path class="cat-ear" d="M107 29l8 8-8 6zM128 33l-4 7 9 3z"/>
+    <path class="cat-detail" d="M120 53q3-2 6 0m7 4 4 1m-2 2 9 0m-9 3 8 3"/>
+    <path class="cat-collar" d="M105 65q9 8 19 8"/>
+  </g>`;
+  function catPicture(action,label) {
+    const body = action==='cat-rest' ?
+      `<g class="cat-rest-body">
+        <path class="cat-tail" d="M63 76q-25 1-20 13 7 12 41 3"/>
+        <ellipse class="cat-fur" cx="86" cy="76" rx="32" ry="19"/>
+        <path class="cat-detail" d="M91 75q-16-11-22 2-3 7 9 10"/>
+        <g transform="translate(12 33) scale(.83)">${catHead}</g></g>` :
+      `<g class="cat-moving-body">
+        <path class="cat-tail" d="M59 53q-17-7-22-28-2-9 6-12"/>
+        <path class="cat-leg cat-stride-back" d="M62 65l-3 18-7 6"/>
+        <path class="cat-leg cat-stride-front" d="M106 63l5 18-4 8"/>
+        <path class="cat-fur" d="M55 52q12-14 38-8l22 9 4 11q-15 12-62 7-13-4-2-19z"/>
+        <path class="cat-leg cat-stride-front far" d="M65 66l9 16-1 7"/>
+        <path class="cat-leg cat-stride-back far" d="M101 65l-4 17 9 7"/>
+        <g class="cat-head-position">${catHead}</g>
+      </g>`;
+    const bowl=action==='cat-feed'?'<path class="cat-bowl" d="M126 83h34l-5 12h-24z"/><path class="cat-detail" d="M128 85h29"/><circle class="cat-kibble" cx="136" cy="82" r="2"/><circle class="cat-kibble" cx="145" cy="81" r="2"/>':'';
+    return `<svg class="action-cat" viewBox="0 0 180 110" role="img" aria-label="猫咪${label}示意">
+      <ellipse class="pet-shadow" cx="89" cy="95" rx="58" ry="3"/>${body}${bowl}
+    </svg>`;
+  }
+
+  function mount(container, classes, labels, onSelect, species) {
+    const group = classes.map(label => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'action-card';
@@ -77,15 +105,16 @@ window.GoCollarsBehaviors = (() => {
       button.dataset.label = label;
       button.setAttribute('aria-label', `${labels[label]}：查看对应 IMU 样本`);
       button.setAttribute('aria-pressed', 'false');
-      button.innerHTML = picture(actions[label], labels[label]) + `<span>${labels[label]}</span>`;
+      button.innerHTML = (species==='cat'?catPicture(actions[label], labels[label]):picture(actions[label], labels[label])) + `<span>${labels[label]}</span>`;
       button.addEventListener('click', () => onSelect(label));
       return button;
     });
-    container.replaceChildren(...cards);
+    cards.set(species,group);
+    container.replaceChildren(...group);
   }
 
-  function select(label) {
-    cards.forEach(card => card.setAttribute('aria-pressed', String(card.dataset.label === label)));
+  function select(species,label) {
+    cards.forEach((group,key)=>group.forEach(card=>card.setAttribute('aria-pressed', String(key===species&&card.dataset.label===label))));
   }
 
   return {mount, select};

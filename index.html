@@ -10,15 +10,16 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="sections.css">
   <link rel="stylesheet" href="behaviors.css">
-  <script src="behaviors.js" defer></script>
+  <link rel="stylesheet" href="assets/research/behavior-update.css?v=shared-r5">
+  <script src="behaviors.js?v=shared-r5" defer></script>
   <script src="device.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=shared-r5" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
   <header class="site-header">
     <a class="brand" href="#" aria-label="GoCollars 首页"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="11" height="11" rx="5.5" fill="#4285f4"/><rect x="18" y="3" width="11" height="11" rx="5.5" fill="#fbbc04"/><rect x="3" y="18" width="11" height="11" rx="5.5" fill="#ea5939"/><path d="M23.5 18a5.5 5.5 0 0 1 0 11H18v-5.5a5.5 5.5 0 0 1 5.5-5.5" fill="#34a879"/></svg><span>GoCollars</span></a>
-    <nav aria-label="主导航"><a href="#capture">感知动作</a><a href="#behavior">理解行为</a><a href="#results">模型表现</a><a href="#roadmap">下一步</a></nav>
+    <nav aria-label="主导航"><a href="#capture">感知动作</a><a href="#behavior">动作识别</a><a href="#results">模型表现</a><a href="#roadmap">下一步</a></nav>
     <a class="github-link" href="https://github.com/GoCollars" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
   </header>
 
@@ -27,13 +28,13 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="tiny-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> PET HEALTH, UNDERSTOOD.</div>
         <h1 id="hero-title">每一个动作，<br>都是它的<span class="color-word">语言<svg viewBox="0 0 220 15" aria-hidden="true"><path d="M3 10Q100-4 216 7"/></svg></span>。</h1>
-        <p class="hero-description">从日常行为出发，探索呼吸与生理信号中的健康线索。<br class="desktop-break">让每一次细微变化，成为更懂它、关心它的开始。</p>
+        <p class="hero-description">从犬猫的日常行为出发，探索呼吸与生理信号中的健康线索。<br class="desktop-break">让每一次细微变化，成为更懂它、关心它的开始。</p>
         <div class="hero-actions"><a class="button primary" href="#capture">开始探索 <span aria-hidden="true">↓</span></a><a class="text-link" href="#behavior">直接体验行为识别 <span aria-hidden="true">↗</span></a></div>
       </div>
-      <div class="hero-visual" id="hero-visual" aria-label="佩戴传感器的犬只概念插画与动态信号">
+      <div class="hero-visual" id="hero-visual" aria-label="佩戴传感器的犬猫概念插画与动态信号">
         <canvas id="hero-particles" aria-hidden="true"></canvas>
         <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-        <div class="pet-portrait">
+        <div class="pet-duo"><div class="pet-portrait dog-portrait">
           <svg viewBox="0 0 440 440" role="img" aria-label="戴着蓝色智能项圈的犬只概念插画">
             <defs><clipPath id="portrait-clip"><circle cx="220" cy="220" r="189"/></clipPath><linearGradient id="fur" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#efc582"/><stop offset="1" stop-color="#d8a15f"/></linearGradient></defs>
             <circle cx="220" cy="220" r="189" fill="#d9eddd"/>
@@ -56,7 +57,7 @@
             </g>
             <circle cx="220" cy="220" r="189" fill="none" stroke="#fff" stroke-width="2"/>
           </svg>
-        </div>
+        </div><img class="hero-cat" src="assets/research/hero-cat.png" width="1254" height="1254" alt="戴着蓝色智能项圈的猫概念插画"></div>
         <div class="floating-card motion-card"><span class="card-icon blue-icon" aria-hidden="true">⌁</span><div><small>6-AXIS IMU</small><strong>捕捉细微动作</strong></div><span class="live-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
         <div class="floating-card behavior-card"><span class="card-icon green-icon" aria-hidden="true">↗</span><div><small>BEHAVIOR RECOGNITION</small><strong>从信号，到理解。</strong></div><span class="mini-check" aria-hidden="true">↗</span></div>
         <span class="visual-caption">项圈概念示意</span>
@@ -95,27 +96,30 @@
           <p class="inline-error" id="capture-error" role="alert" hidden></p>
         </div>
       </div>
-      <div class="connection-note"><span aria-hidden="true">↳</span> 分别展示硬件采集记录与公开犬类数据集上的行为识别结果。</div>
+      <div class="connection-note"><span aria-hidden="true">↳</span> 硬件采集回放与犬猫行为识别分别来自各自的数据记录。</div>
     </section>
 
     <section class="behavior-section" id="behavior" aria-labelledby="behavior-title">
       <div class="wrap">
-        <div class="section-heading"><div><div class="eyebrow orange-text">Behavior Recognition</div><h2 id="behavior-title">它在做什么？</h2><p>把两秒 IMU 信号交给 AI，看动作如何变成行为概率。</p></div><div class="behavior-facts"><span><b>2</b> 秒 / 窗口</span><span><b>200</b> 采样点</span><span><b>7</b> 种行为</span></div></div>
-        <div id="behavior-gallery" class="behavior-gallery" role="group" aria-label="七种犬只行为的动画示意；点击动作查看对应 IMU 样本"></div>
+        <div class="section-heading"><div><h2 id="behavior-title">动作识别演示</h2><p>选择一个动作，查看对应的波形和模型预测。</p></div></div>
+        <h3 id="dog-actions-title" class="action-row-title">犬只行为</h3>
+        <div id="behavior-gallery" class="behavior-gallery" role="group" aria-labelledby="dog-actions-title"></div>
+        <h3 id="cat-actions-title" class="action-row-title">猫咪行为</h3>
+        <div id="cat-gallery" class="behavior-gallery cat-gallery" role="group" aria-labelledby="cat-actions-title"></div>
         <div class="sample-strip"><div class="panel-kicker">CHOOSE A MOMENT <span id="sample-total">10 个样本</span></div><div id="sample-list" class="sample-list" aria-label="样本列表"></div></div>
         <div class="behavior-workspace" id="ai-pipeline">
           <div class="signal-panel">
             <div class="flow-step"><span>01</span> IMU 数据输入</div>
             <div class="signal-toolbar"><div><span class="dark-dot"></span><strong id="signal-title">正在载入样本</strong></div><button class="icon-text light-text" id="view-image" type="button">原图 ↗</button></div>
             <div class="signal-stage"><canvas id="behavior-signal" role="img" aria-label="作为 AI 输入的六通道 IMU 信号，纵轴为原始存储值"></canvas><div class="signal-tooltip" id="signal-tooltip" hidden></div></div>
-            <div class="signal-footer"><span>六轴 IMU 信号</span><span id="signal-position">0.00 — 2.00 s</span></div>
+            <div class="signal-footer"><span id="signal-kind">100 Hz · 六轴 IMU</span><span id="signal-position">0.00 — 2.00 s</span></div>
             <div class="signal-controls"><button class="round-play dark-play" id="behavior-play" type="button" aria-label="播放当前行为信号">▶</button><input id="behavior-seek" type="range" min="0" max="199" value="199" aria-label="行为信号进度"><a class="signal-download" id="sample-download" href="#" download>CSV ↓</a></div>
             <div class="truth-bar"><span>真实标签</span><strong id="truth-label">—</strong><span class="truth-tag">GROUND TRUTH</span></div>
           </div>
           <div class="model-panel">
-            <div class="flow-step"><span>02</span> AI 行为模型</div>
-            <div class="model-visual"><div class="flow-wire wire-in"><i></i><i></i><i></i></div><div class="model-orbit orbit-a"></div><div class="model-orbit orbit-b"></div><div class="ai-core"><div class="ai-core-grid"><i></i><i></i><i></i><i></i></div><strong>AI</strong><span>BEHAVIOR MODEL</span></div><div class="flow-wire wire-out"><i></i><i></i><i></i></div></div>
-            <div class="model-description"><h3>从运动模式<br>理解行为。</h3><p>轻量模型 · 七类行为</p></div>
+            <div class="flow-step"><span>02</span> 行为模型</div>
+            <div class="model-visual"><div class="flow-wire wire-in"><i></i><i></i><i></i></div><div class="model-orbit orbit-a"></div><div class="model-orbit orbit-b"></div><div class="ai-core"><div class="ai-core-grid"><i></i><i></i><i></i><i></i></div><strong>Gula-Act-2.0</strong><span>（AI 模型）</span></div><div class="flow-wire wire-out"><i></i><i></i><i></i></div></div>
+            <div class="model-description"><h3>从运动模式<br>理解行为。</h3><p id="model-spec">七类行为</p></div>
             <button id="run-inference" class="run-inference" type="button">播放识别过程 <span aria-hidden="true">→</span></button>
             <div class="inference-status" id="inference-status" role="status"><span></span><span id="inference-status-text">准备就绪</span></div>
             <span class="replay-label">已保存结果回放</span>
@@ -125,21 +129,15 @@
             <div class="prediction-result"><strong id="prediction-label">—</strong><span id="prediction-en">—</span><span id="prediction-match" class="match-badge">—</span></div>
             <div class="probability-heading"><span>行为概率</span></div>
             <div id="probabilities" class="probabilities"></div>
+            <div class="sample-comparison" id="model-comparison" aria-live="polite"></div>
           </aside>
         </div>
         <div class="demo-bottom"><button type="button" class="text-link" id="next-sample">下一个样本 <span aria-hidden="true">→</span></button></div>
       </div>
     </section>
 
-    <section class="results-section" id="results" aria-labelledby="results-title">
-      <div class="wrap">
-        <div class="section-heading"><div><div class="eyebrow green-text">MODEL PERFORMANCE</div><h2 id="results-title">好奇心，也需要证据。</h2><p>七类行为识别 · 按犬只独立评估</p></div></div>
-        <div class="result-grid">
-          <article class="result-card our-result"><span class="result-tag">BEHAVIOR RECOGNITION</span><div class="result-model"><h3>Our Model</h3></div><div class="big-metric"><strong id="our-f1">79.42</strong><span>%<small>Macro-F1</small></span><div class="metric-art" aria-hidden="true">⌁</div></div><div class="minor-metrics"><span>测试窗口 <b>3,708</b></span><span>测试犬只 <b>9</b></span></div></article>
-          <article class="result-card benchmark-result"><span class="result-tag">MODEL COMPARISON</span><div class="result-model"><h3>GPT 6.1 Sol</h3></div><div class="big-metric"><strong id="comparison-f1">44.46</strong><span>%<small>Macro-F1</small></span><div class="metric-art metric-ai" aria-hidden="true">AI</div></div></article>
-        </div>
-      </div>
-    </section>
+    <section class="results-section compact-results" id="results" aria-labelledby="results-title">
+      <div class="wrap"><div class="section-heading"><div><h2 id="results-title">模型表现</h2><p>Balanced Accuracy（平衡准确率）</p></div></div><div class="model-plots"><article class="model-plot" aria-labelledby="dog-plot-title"><header><h3 id="dog-plot-title">9 只测试犬</h3><span class="plot-delta" aria-label="从 1.0 到 2.0 提升 4.33 个百分点">1.0 → 2.0 &ensp;+4.33 pp</span></header><div class="plot-inner"><div class="plot-ticks" aria-hidden="true"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="plot-body"><ol><li class="plot-column plot-v1"><div class="plot-track" style="--value:78.20230%"><span class="plot-number">78.20%</span><i aria-hidden="true"></i></div><span class="plot-label">Gula-Act-1.0</span></li><li class="plot-column plot-v2"><div class="plot-track" style="--value:82.52830%"><span class="plot-number">82.53%</span><i aria-hidden="true"></i></div><span class="plot-label">Gula-Act-2.0</span></li><li class="plot-column "><div class="plot-track" style="--value:55.60444%"><span class="plot-number">55.60%</span><i aria-hidden="true"></i></div><span class="plot-label">GPT‑6.1 Sol</span></li><li class="plot-column "><div class="plot-track" style="--value:39.01092%"><span class="plot-number">39.01%</span><i aria-hidden="true"></i></div><span class="plot-label">Qwen4-Max</span></li></ol><svg class="plot-gain" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true"><path d="M84 21.798 L114 17.472 m-7 -1.5 7 1.5 -5 3"/></svg></div></div></article><article class="model-plot" aria-labelledby="cat-plot-title"><header><h3 id="cat-plot-title">2 只测试猫</h3><span class="plot-delta" aria-label="从 1.0 到 2.0 提升 9.44 个百分点">1.0 → 2.0 &ensp;+9.44 pp</span></header><div class="plot-inner"><div class="plot-ticks" aria-hidden="true"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="plot-body"><ol><li class="plot-column plot-v1"><div class="plot-track" style="--value:53.16552%"><span class="plot-number">53.17%</span><i aria-hidden="true"></i></div><span class="plot-label">Gula-Act-1.0</span></li><li class="plot-column plot-v2"><div class="plot-track" style="--value:62.60503%"><span class="plot-number">62.61%</span><i aria-hidden="true"></i></div><span class="plot-label">Gula-Act-2.0</span></li><li class="plot-column "><div class="plot-track" style="--value:40.65934%"><span class="plot-number">40.66%</span><i aria-hidden="true"></i></div><span class="plot-label">GPT‑6.1 Sol</span></li><li class="plot-column "><div class="plot-track" style="--value:41.22444%"><span class="plot-number">41.22%</span><i aria-hidden="true"></i></div><span class="plot-label">Qwen4-Max</span></li></ol><svg class="plot-gain" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true"><path d="M84 46.834 L114 37.395 m-7 -1.5 7 1.5 -5 3"/></svg></div></div></article></div></div></section>
 
     <section class="roadmap-section wrap" id="roadmap" aria-labelledby="roadmap-title">
       <div class="section-heading"><div><div class="eyebrow blue-text">WHAT'S NEXT <span class="eyebrow-line"></span> THE ROAD AHEAD</div><h2 id="roadmap-title">从理解动作，<br>走向理解健康。</h2><p>下一步，把采集板变成可佩戴的项圈，把行为信号延伸到呼吸与健康趋势。</p></div><span class="roadmap-label">下一阶段研发方向</span></div>
@@ -166,7 +164,7 @@
     <section class="closing wrap"><span class="closing-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><h2>更懂它一点，<br>更好地关心它。</h2><a class="button primary" href="https://github.com/GoCollars" target="_blank" rel="noopener noreferrer">在 GitHub 认识我们 <span aria-hidden="true">↗</span></a></section>
   </main>
   <footer class="site-footer wrap"><a class="brand" href="#">GoCollars </a><span>宠物健康科技</span><a href="#main">回到顶部 ↑</a></footer>
-  <dialog id="image-dialog"><div class="dialog-header"><strong id="image-dialog-title">样本原始波形图</strong><button class="dialog-close" type="button" aria-label="关闭图片">×</button></div><img id="original-image" alt="当前样本的原始六通道波形图"><p>六轴 IMU 波形</p></dialog>
+  <dialog id="image-dialog"><div class="dialog-header"><strong id="image-dialog-title">样本原始波形图</strong><button class="dialog-close" type="button" aria-label="关闭图片">×</button></div><img id="original-image" alt="当前样本的原始六通道波形图"><p id="signal-caption">6 轴 IMU 波形</p></dialog>
   <dialog id="usb-dialog"><div class="dialog-header"><strong>把真实世界接进来。</strong><button class="dialog-close" type="button" aria-label="关闭连接说明">×</button></div><div class="usb-dialog-body"><span class="usb-dialog-icon" aria-hidden="true">⌁</span><h2>连接 IMU PCB</h2><p>接通已烧录当前固件的开发板，先断开本地采集台或其他占用设备的程序，再选择连接方式。</p><label class="transport-label">连接方式<select id="capture-transport"><option value="usb">USB 数据线</option><option value="ble">BLE 蓝牙 · GoCollars-IMU</option></select></label><p id="usb-support-note" class="usb-support-note" role="status"></p><button class="button primary" id="usb-confirm" type="button">选择串口设备 ↗</button><p class="device-note">使用桌面Chrome。浏览器会请求设备访问权限，数据保存在本页内存中，刷新或关闭页面会清空记录，请及时导出CSV。</p></div></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   <noscript><div class="noscript">请启用 JavaScript，体验曲线回放和样本探索。完整评估结果已列在下方。</div></noscript>
