@@ -357,7 +357,7 @@ function bindEvents() {
 async function loadData(path){const response=await fetch(path);if(!response.ok)throw new Error('无法载入 '+path);return response.json();}
 async function init(){
   bindEvents();requestAnimationFrame(frame);
-  const results=await Promise.allSettled([loadData('assets/data/capture.json'),loadData('assets/data/samples.json?v=shared-r5')]);
+  const results=await Promise.allSettled([loadData('assets/data/capture.json'),loadData('assets/data/samples.json?v=feed-r1')]);
   if(results[0].status==='fulfilled'){state.capture=results[0].value;renderCapture();}else{showCaptureError('采集数据载入失败。请通过本地 HTTP 服务打开页面并刷新。');}
   if(results[1].status==='fulfilled'){
     state.data=results[1].value;
